@@ -1,6 +1,9 @@
 ---
 layout: post
-title:  "Welcome to Jekyll!"
+title:  테스트1
+description: >
+    테스트 내용 ㅎㅇㅎㅇ
+tags: [AI]
 date:   2023-07-06 21:17:17 +0900
 categories: jekyll update
 ---
