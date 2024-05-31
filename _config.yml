@@ -16,7 +16,7 @@ timezone: Asia/Shanghai
 
 title: Blog Rogers # the main title
 
-tagline: Welcome! Let's study together. # it will display as the sub-title
+tagline: Life is a JOURNEY. # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
   A minimal, responsive and feature-rich Jekyll theme for technical writing.
@@ -85,10 +85,10 @@ theme_mode: # [light | dark]
 # will be added to all image (site avatar & posts' images) paths starting with '/'
 #
 # e.g. 'https://cdn.com'
-img_cdn: "https://chirpy-img.netlify.app"
+#img_cdn: "https://chirpy-img.netlify.app"
 
 # the avatar on sidebar, support local or CORS resources
-avatar: "/Users/macbookair/RogersHun.github.io/assets/img/ct.jpg"
+avatar:
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.

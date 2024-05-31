@@ -705,7 +705,7 @@ $btn-mb: 0.5rem;
   width: $sidebar-width;
   z-index: 99;
   background: var(--sidebar-bg);
-  background: url('/assets/img/2.png');
+  background: url('/assets/img/book1.jpg');
   background-size: 100% 110%;
   background-position: center;
   border-right: 1px solid var(--sidebar-border-color);
@@ -721,7 +721,7 @@ $btn-mb: 0.5rem;
 
   %sidebar-link-hover {
     &:hover {
-      color: var(--sidebar-active-color);
+      color: rgba(246, 254, 255, 99%);
     }
   }
 
@@ -735,6 +735,9 @@ $btn-mb: 0.5rem;
     height: 7rem;
     overflow: hidden;
     box-shadow: var(--avatar-border-color) 0 0 0 2px;
+    background: url('/assets/img/hd.jpg');
+    background-size: 100% 110%;
+    background-position: center;
     transform: translateZ(0); /* fixed the zoom in Safari */
 
     img {
@@ -768,13 +771,13 @@ $btn-mb: 0.5rem;
       @extend %clickable-transition;
       @extend %sidebar-link-hover;
 
-      color: var(--site-title-color);
+      color: rgba(246, 254, 255, 99%);
     }
   }
 
   .site-subtitle {
     font-size: 95%;
-    color: var(--site-subtitle-color);
+    color: rgba(246, 254, 255, 99%);
     margin-top: 0.25rem;
     word-spacing: 1px;
     -webkit-user-select: none;
