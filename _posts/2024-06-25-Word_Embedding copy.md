@@ -55,7 +55,7 @@ Word Embedding은 단어를 고차원 공간의 밀집 벡터로 변환하여 �
 
 해당 모델의 가장 큰 특징은 단순한 학습 방법을 사용해서 계산량이 매우 적은 편이라 더 많은 양의 데이터를 다룰 수 있다는 것이다. Word2Vec은 학습 시 두 모델 중 하나로 학습을 할 수 있는데, 그것이 **Continuous Bag-Of-Words(CBOW)**와 **Skip-gram**이다.   
 
-![skipgram](/_posts/imgs/IMG_0375.png){: width="400" height="300" style="display: block; margin: 0 auto;"}
+![skipgram](/assets/img/IMG_0375.png){: width="400" height="300" style="display: block; margin: 0 auto;"}
 _Image of CBOW, Skip-gram_   
 
 
@@ -74,7 +74,7 @@ Skip-gram은 같은 프로세스를 주변 단어 "I", "love", "chicken"이 아�
 
 Word2Vec과 함께 가장 많이 쓰이는 단어 단위 임베딩 기술이다. 기본 아이디어는 '단어 쌍들의 동시 발생 빈도를 기반으로 단어 벡터를 학습한다'이다. 예시를 함께 보면 훨씬 이해가 쉬울 것이다. 
 
-![GloVe 동시 발생 행렬 예시](https://drive.google.com/uc?id='1yFzFEsLU7-9847JuKpk5w8mjdJ_GK8sB')
+![GloVe 동시 발생 행렬 예시](/assets/img/IMG_0374.png)
 _GloVe 동시 발생 행렬 예시_
 
 
