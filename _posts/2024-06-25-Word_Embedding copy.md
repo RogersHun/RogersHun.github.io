@@ -4,7 +4,7 @@ description: One-hot encoding, Word Embedding(CBOW & Skip-gram), GloVe
 #author: RogersHun
 date: 2024-06-25 11:33:00 +0800
 categories: [AI, NLP]
-tags: [One-hot encoding, Word Embedding, CBOW, Skip-gram, GloVe] #밑에 태그
+#tags: [One-hot encoding, Word Embedding, CBOW, Skip-gram, GloVe] #밑에 태그
 pin: true
 math: true
 mermaid: true 
