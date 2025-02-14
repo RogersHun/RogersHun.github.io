@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ✅ Ruby 설치 (ruby-build를 사용)
+      # ✅ ruby-build로 Ruby 설치
       - name: Install Ruby using ruby-build
         run: |
           ruby-build 3.1.4 /opt/hostedtoolcache/Ruby/3.1.4/x64
@@ -25,7 +25,7 @@ jobs:
           export PATH="/opt/hostedtoolcache/Ruby/3.1.4/x64/bin:$PATH"
           ruby -v  # Ruby 버전 확인
 
-      # ✅ 필요한 종속성 설치
+      # ✅ 종속성 설치
       - name: Install dependencies
         run: bundle install
 
