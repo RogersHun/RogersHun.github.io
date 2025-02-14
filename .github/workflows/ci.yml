@@ -29,6 +29,16 @@ jobs:
         with:
           fetch-depth: 0 # for posts's lastmod
 
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libreadline-dev zlib1g-dev
+
+      - name: Install Ruby using ruby-build
+        run: |
+          ruby-build ${{ matrix.ruby }} /opt/hostedtoolcache/Ruby/${{ matrix.ruby }}/x64
+          touch /opt/hostedtoolcache/Ruby/${{ matrix.ruby }}/x64.complete
+
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
