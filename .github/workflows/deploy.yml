@@ -7,13 +7,13 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-24.04-x64
+    runs-on: ubuntu-24.04-x64 # self-hosted 런너
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ✅ Ruby를 $RUNNER_TOOL_CACHE에 설치
+      # ✅ Ruby 설치 (ruby-build를 사용)
       - name: Install Ruby using ruby-build
         run: |
           ruby-build 3.1.4 /opt/hostedtoolcache/Ruby/3.1.4/x64
@@ -25,12 +25,15 @@ jobs:
           export PATH="/opt/hostedtoolcache/Ruby/3.1.4/x64/bin:$PATH"
           ruby -v  # Ruby 버전 확인
 
+      # ✅ 필요한 종속성 설치
       - name: Install dependencies
         run: bundle install
 
+      # ✅ Jekyll 사이트 빌드
       - name: Build site
         run: bundle exec jekyll build
 
+      # ✅ GitHub Pages에 배포
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
