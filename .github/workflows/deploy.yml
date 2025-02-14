@@ -1,15 +1,27 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # 또는 배포할 브랜치 이름
+
 jobs:
   deploy:
-    runs-on: ubuntu-latest # 공식 GitHub 러너 사용 시
+    runs-on: ubuntu-latest # self-hosted 러너라면 'self-hosted'로 변경
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Ruby
+      - name: Install Ruby manually
         run: |
-          ruby-build 3.1.4 /opt/hostedtoolcache/Ruby/3.1.4/x64
-          touch /opt/hostedtoolcache/Ruby/3.1.4/x64.complete
-          echo "PATH=/opt/hostedtoolcache/Ruby/3.1.4/x64/bin:$PATH" >> $GITHUB_ENV
+          sudo apt update
+          sudo apt install -y rbenv ruby-build
+          rbenv install 3.1.4
+          rbenv global 3.1.4
+          echo "PATH=$HOME/.rbenv/bin:$HOME/.rbenv/shims:$PATH" >> $GITHUB_ENV
+
+      - name: Check Ruby version
+        run: ruby -v
 
       - name: Install dependencies
         run: bundle install
