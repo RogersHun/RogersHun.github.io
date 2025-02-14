@@ -1,0 +1,191 @@
+[
+  
+  {
+    "title": "Python",
+    "url": "/posts/dd-copy-6/",
+    "categories": "AI, Python",
+    "tags": "",
+    "date": "2025-01-17 20:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "  Python 기본 정리            자료형(data type)      언어      예시                  정수(integer)      int      10, 20              실수(float)      float      3.14              문자열(string)      str      “python...",
+    "content": "  Python 기본 정리            자료형(data type)      언어      예시                  정수(integer)      int      10, 20              실수(float)      float      3.14              문자열(string)      str      “python”              부울형(bool)      bool      True, False        용어정리      Module : 함수나 변수 또는 클래스들을 별도의 스크립트 파일로 저장한 것을 의미함. 하나의 .py 파일 안에 함수, 변수, 클래스들이 모여있는 것임.    Package :  여러 모듈이 한 폴더 안에 관리되는 것으로 .py 파일이 여러개 존재하는 것임.    Library : 여러 모듈이나 패키지를 모아놓은 것을 의미함. ➡️   Library &gt;= Package &gt;= Module 이라고 볼 수 있음.  [내용 추가 예정…]"
+  },
+  
+  {
+    "title": "Github.io snake 오류 모음",
+    "url": "/posts/dd/",
+    "categories": "Debug, Github",
+    "tags": "",
+    "date": "2024-11-27 20:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "  Github.io 오류 정리  깃허브 블로그 오류 모음  snake.yml      The process ‘/usr/bin/git’ failed with exit code 128  Action 구동 상에서 오류가 생겼는데 찾아본 결과 Token의 기간이 만료되어 재발급 해주는 방식으로 오류를 해결했다.  프로필 사진 클릭 - settings  왼쪽...",
+    "content": "  Github.io 오류 정리  깃허브 블로그 오류 모음  snake.yml      The process ‘/usr/bin/git’ failed with exit code 128  Action 구동 상에서 오류가 생겼는데 찾아본 결과 Token의 기간이 만료되어 재발급 해주는 방식으로 오류를 해결했다.  프로필 사진 클릭 - settings  왼쪽 바에 “Developer settings” - “Personal access tokens” - Tokens(classic)  우측 상단의 “Generate new token (classic)  여기서 Expiration의 기간을 설정하고(보안상 문제 없고 자주 바꾸기 귀찮으면 1년정도로), Select scopes에서 “repo”, “workflow”, “admin:org”의 “read:org” 정도만 체크해도 되는데 안되는 경우 모두 체크하고 하는 방법도 있다.  이후에 토큰이 생성되면 이 토큰 번호는 따로 저장해 둔다.  그리고 본인 snake.yml이 있는 레포로 이동한 후, 상단에 “Settings” - 왼쪽바에 “Secrets and variables” - “Actions”를 클릭한다.  “New repository secret”을 누르고 제목을 반드시 “GH_TOKEN”으로 한 후, 내용에는 발급받은 토큰을 입력한다.(이걸 넣어야 꼭 되는지는 확실하진 않지만 경험상 발급 코드를 넣었을 때 실행이 되었다)  이후에 snake 레포 상단에 “Actions”를 누르고 왼쪽 바에 “generate animation”을 누르고 “Run workflow”를 열고 초록색 “Run workflow”를 누르면 정상적으로 실행이 되었다면 다음과 같이 초록색 체크 표시가 뜰 것이다."
+  },
+  
+  {
+    "title": "Github.io snake 오류 모음",
+    "url": "/posts/dd-copy-4/",
+    "categories": "Debug, Python",
+    "tags": "",
+    "date": "2024-11-27 20:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "  Github.io 오류 정리  깃허브 블로그 오류 모음  snake.yml      The process ‘/usr/bin/git’ failed with exit code 128  Action 구동 상에서 오류가 생겼는데 찾아본 결과 Token의 기간이 만료되어 재발급 해주는 방식으로 오류를 해결했다.  프로필 사진 클릭 - settings  왼쪽...",
+    "content": "  Github.io 오류 정리  깃허브 블로그 오류 모음  snake.yml      The process ‘/usr/bin/git’ failed with exit code 128  Action 구동 상에서 오류가 생겼는데 찾아본 결과 Token의 기간이 만료되어 재발급 해주는 방식으로 오류를 해결했다.  프로필 사진 클릭 - settings  왼쪽 바에 “Developer settings” - “Personal access tokens” - Tokens(classic)  우측 상단의 “Generate new token (classic)  여기서 Expiration의 기간을 설정하고(보안상 문제 없고 자주 바꾸기 귀찮으면 1년정도로), Select scopes에서 “repo”, “workflow”, “admin:org”의 “read:org” 정도만 체크해도 되는데 안되는 경우 모두 체크하고 하는 방법도 있다.  이후에 토큰이 생성되면 이 토큰 번호는 따로 저장해 둔다.  그리고 본인 snake.yml이 있는 레포로 이동한 후, 상단에 “Settings” - 왼쪽바에 “Secrets and variables” - “Actions”를 클릭한다.  “New repository secret”을 누르고 제목을 반드시 “GH_TOKEN”으로 한 후, 내용에는 발급받은 토큰을 입력한다.(이걸 넣어야 꼭 되는지는 확실하진 않지만 경험상 발급 코드를 넣었을 때 실행이 되었다)  이후에 snake 레포 상단에 “Actions”를 누르고 왼쪽 바에 “generate animation”을 누르고 “Run workflow”를 열고 초록색 “Run workflow”를 누르면 정상적으로 실행이 되었다면 다음과 같이 초록색 체크 표시가 뜰 것이다."
+  },
+  
+  {
+    "title": "CNN (with NLP)",
+    "url": "/posts/1dCNN/",
+    "categories": "AI, NLP, CNN",
+    "tags": "",
+    "date": "2024-07-01 12:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "  IntroCNN(Convolutional Neural Network)이 처음 제시된 것은 1998년이었다. 처음 모델이 제안되었을 당시에는 현재와 달리 대규모 데이터 셋 및 GPU의 발전이 미약했다는 점 등 CNN을 사용하기에 부족함이 있었다.Gradient-based learning applied to document recognition, Le...",
+    "content": "  IntroCNN(Convolutional Neural Network)이 처음 제시된 것은 1998년이었다. 처음 모델이 제안되었을 당시에는 현재와 달리 대규모 데이터 셋 및 GPU의 발전이 미약했다는 점 등 CNN을 사용하기에 부족함이 있었다.Gradient-based learning applied to document recognition, Lecun et al., 1998 CNN paper이런 와중, 2012년에 ILSVRC(이미지 분류 및 객체 탐지 알고리즘 대회)에서 사용되었던 AlexNet에 의해 CNN은 크게 재조명 되었다. 당시 대회에서 높은 분류 정확도로 우승하여 새로운 딥러닝의 시대를 알리는 계기가 되었다.ImageNet Classification with Deep Convolutional Neural Networks, Krizhevsky et al., 2012 AlexNet paperCNN은 이미지 처리, 객체 탐지 등 다양한 분야에서 응용되었다. 영상이나 이미지에 주로 사용이 되었지만, 자연어 처리 분야(NLP)에서도 많은 효과들이 입증되었다.해당 글에서는 NLP에서 CNN을 다루는 1D-CNN에 대해서 다뤄보도록 하겠다.     CNN (Convolutional Neural Network)  이미지, 텍스트 등 데이터를 합성곱 연산과 풀링 연산을 통해 특징 추출 및 분류 등을 진행할 수 있는 모델 CNN model Architecture입력 데이터의 차원에 따라서 1차원 배열이면 1D, 이미지처럼 2차원 행렬 데이터면 2D로 구분된다. 텍스트는 1차원의 벡터 형태로 모델에 입력되기 때문에 1D에 속한다. 1D-CNN의 프로세스는 다음과 같다.  1D 데이터 입력을 받고,  합성곱을 통해 데이터의 특징(패턴)을 학습하여 Feature Map을 출력한다.  이를 ReLU와 같은 활성화 함수(Activation Function)를 적용시켜 음수 값을 제거하고 비선형의 복잡한 패턴을 학습한다.  이후에 풀링(Pooling)층에서 MaxPooling이나 AveragePooling 등을 거쳐  완전 연결 층(Fully Connected Layer)에 입력하여 최종 출력을 계산한다.  1D-CNN 코드 구현  다음은 1D-CNN을 코드로 구현한 예시이다. 리뷰 텍스트를 통해 구현해 보기 위해 오픈 데이터 셋인 Amazon.com의 가벼운 용량의 Gift_Card 데이터를 사용하였다.# Packageimport gzipimport jsonimport pandas as pdimport numpy as npimport tensorflow as tfimport nltkfrom nltk.tokenize import word_tokenizefrom nltk.corpus import stopwordsfrom gensim.models import Word2Vecfrom tensorflow.keras.preprocessing.sequence import pad_sequencesfrom tensorflow.keras.models import Sequentialfrom tensorflow.keras.layers import Conv1D, GlobalMaxPooling1D, Dense, Dropoutfrom sklearn.model_selection import train_test_split# gzip 파일 풀고 DF로 저장def parse(path):    g = gzip.open(path, 'rb')    for l in g:         yield json.loads(l)def getDF(path):    i = 0    df = {}    for d in parse(path):        df[i] = d        i += 1    return pd.DataFrame.from_dict(df, orient = 'index')# 불용어 처리 함수def stopword(tokens):    return [word for word in tokens if word.lower() not in stop_words]    # 리뷰 토큰을 벡터로 변환def review_to_vec(review, model, vector_size = 100):    vectors = [model.wv[word] for word in review if word in model.wv]    return vectorsgetDF 함수로 데이터를 불러온 후, head를 찍어 데이터를 보면 다음과 같은 형식이다.여기서 사용자의 리뷰를 다루는 text 컬럼을 사용하여 불용어 처리 및 토큰화를 진행하고 이를 Word Embedding을 통해 모델에 입력할 준비를 하였다. 불용어 처리 및 토큰화는 nltk 라이브러리를 사용하였고, Word Embedding은 간단히 Word2Vec으로 진행하였다.# # nltk.download('punkt')# nltk.download('stopwords')stop_words = set(nltk.corpus.stopwords.words('english'))df_token = data['text'].apply(lambda x: word_tokenize(x) if isinstance(x, str) else [])# 불용어 처리df_stop = df_token.apply(lambda x: stopword(x) if isinstance (x,list) else [])# Word2Vec Embeddingtoken_review = df_stop.tolist()df_filtered = Word2Vec(sentences = token_review, vector_size = 100, window = 5, min_count = 1, workers = 4)'''window = 문맥 창 크기, min_count = 학습에 사용할 최소 빈도'''word_vector = df_filtered.wv['good']print(word_vector)여기서 각 단어가 어떻게 100차원의 벡터로 표현되는지 출력해 보면 다음과 같다.본 결과는 각 단어당 100차원의 벡터 형태로 변환이 되고, 이렇게 각 리뷰별로 단어 수 만큼의 100차원의 벡터로 구성되게 되어진다.이후, 리뷰 벡터를 CNN에 입력하기 위해서 리뷰 별 차원을 맞춰주고, 컨볼루션 및 풀링 층에 입력하여 리뷰 내의 특성을 추출하고 차원을 축소하여 최종 결과를 출력하도록 하였다.review_vector = df_stop.apply(lambda x : review_to_vec(x, df_filtered))max_len = 50X = pad_sequences([np.array(r) for r in review_vector], maxlen = max_len, dtype = 'float32', padding = 'post', truncating = 'post', value = 0)# 1D-CNNmodel = Sequential()model.add(Conv1D(filters = 128, kernel_size = 5, activation = 'relu', input_shape = (max_len, 100)))model.add(GlobalMaxPooling1D())model.add(Dense(64, activation = 'relu'))model.add(Dropout(0.5))model.add(Dense(1, activation = 'sigmoid'))model.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])model.summary()# train_test_splitX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)print(\"학습 데이터 크기:\", X_train.shape, y_train.shape)print(\"테스트 데이터 크기:\", X_test.shape, y_test.shape)# model fitmodel.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.1)loss, accuracy = model.evaluate(X_test, y_test)print(f\"테스트 데이터 손실 (Loss): {loss:.4f}\")print(f\"테스트 데이터 정확도 (Accuracy): {accuracy:.4f}\")매우 간단하게 구현하고자 하여 성능이 높진 않으나 해당 프로세스를 활용해서 리뷰 텍스트를 활용한 분석을 통해 다양한 방식으로 사용할 수 있다.(추후 수정 및 추가..)"
+  },
+  
+  {
+    "title": "Word Embedding",
+    "url": "/posts/Word_Embedding-copy/",
+    "categories": "AI, NLP",
+    "tags": "",
+    "date": "2024-06-25 12:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "  Intro2013년, Google 사에서 다음과 같은 연구가 발표되었다.Efficient Estimation of Word Representations in Vector Space, Mikolov et al., 2013본 논문의 Word2Vec model은 CBOW와 Skip-gram Arichitecture를 통해 효율적으로 단어의 벡터 표현을 ...",
+    "content": "  Intro2013년, Google 사에서 다음과 같은 연구가 발표되었다.Efficient Estimation of Word Representations in Vector Space, Mikolov et al., 2013본 논문의 Word2Vec model은 CBOW와 Skip-gram Arichitecture를 통해 효율적으로 단어의 벡터 표현을 학습하는 방법을 제시하였다. 이는 NLP(자연어처리) 분야에 큰 영향을 미쳤고, 현재까지도 많은 연구 및 산업에 사용되는 BERT, GPT 등 Transformer model의 근간이 되었다.해당 글에서는 Word Embedding 이전에 사용되었던 One-hot encoding과, Word Embedding(with CBOW &amp; Skip-gram), Word2Vec과 가장 많이 쓰이던 단어 임베딩 기술인 GloVe에 대해 다뤄보겠다.  One-Hot Encoding  한줄 요약 : 각 단어를 고유한 벡터로 표현하는 방법으로, 생성되는 벡터에서 하나의 요소만 1이고 나머지는 0으로 표현되는 벡터를 생성하는 과정NLP, 이미지처리, 신호처리 등의 분야에서 사용될 수 있으며 NLP에서는 주로 텍스트 데이터를 수치 데이터로 변환할 때 사용된다. Word Embedding 이전, 구현이 간단하고 명확하여 가장 많이 쓰였었다.벡터를 생성하는 방식은 다음과 같다. 예를 들어, [‘Ronaldo’,’Messi’,’Son’,’Ohtani’] 라는 단어집이 있다. 각 단어의 위치 (인덱스 즉, 순서를 부여하여 할당함 ex.Ronaldo -&gt; 0, Messi -&gt; 1) 에 해당하는 부분만 1, 나머지는 0으로 채워 벡터를 생성한다.'Ronaldo' = [1,0,0,0]'Messi' = [0,1,0,0]    'Son' = [0,0,1,0]    'Ohtani' = [0,0,0,1]   단어 집합의 크기가 4 이므로, 각 단어는 4차원 벡터로 표현된다. 이렇게 생성된 벡터는 텍스트 분류, 생성, 변역, 임베딩 레이어의 입력값으로 사용된다.간단하고 사용도 편하지만, 딥러닝 모델등에 넣기에는 데이터의 크기가 발목을 잡게 된다.  단어집의 크기가 지금은 4개지만  크기가 커질수록 벡터의 크기도 커지는데, 커질수록 0의 값은 많아지지만 1의 값은 단 하나이다.    즉, 희소한 벡터를 생성 한다라고 말할 수 있다.    또한, 단어 간의 유사성을 반영하지 못하는데, 예를들어, ‘Football’, ‘Soccer’는 의미적으로 유사하지만 One-hot encoding에서는 유사한 것을 표현하지 못하고 아예 다른 벡터로써 표현된다.    이러한 문제점들을 개선한 것이 Word Embedding 방식이다.  cf. 텍스트 데이터를 수치 데이터로 바꾸는 이유? 인간만 이해할 수 있는 자연어(인간 언어)를 컴퓨터가 이해할 수 있는 수치로 바꾸는 과정이 필요하기 때문.  Word EmbeddingWord Embedding은 단어를 고차원 공간의 밀집 벡터로 변환하여 단어 간 유사성을 학습하는 기법이다. 이 방법 중 하나로 주로 사용되는 것이 Word2Vec과 GloVe이다.     Word2Vec해당 모델의 가장 큰 특징은 단순한 학습 방법을 사용해서 계산량이 매우 적은 편이라 더 많은 양의 데이터를 다룰 수 있다는 것이다. Word2Vec은 학습 시 두 모델 중 하나로 학습을 할 수 있는데, 그것이 Continuous Bag-Of-Words(CBOW)와 Skip-gram이다.Image of CBOW, Skip-gramCBOW는 특정 단어가 있을 때, 이 단어의 이전 n개의 단어와 이후 n개의 단어로 특정 단어를 예측한다. Skip-gram은 특정 단어가 주어졌을 때, 이 단어의 이전 n개의 단어와 이후 n개의 단어를 예측한다. 예를 들어, “I”, “love”, “eating”, “chicken”이라는 문장이 있다고 가정하고 중심 단어가 “eating”이라고 가정해 보자. 다음과 같은 프로세스로 CBOW는 예측을 진행한다.  주변 단어들(“I”, “love”, “chicken”)을 one-hot encoding을 통해 벡터로 변환한다.  나온 벡터들의 평균을 계산한다.  평균 벡터를 은닉층 가중치 행렬과 곱하여 임베딩 벡터를 만든다.  임베딩 벡터를 출력층 가중치 행렬과 곱샇여 점수 벡터를 만든다.  점수 벡터에 softmax 함수를 적용하여 확률 분표를 계산한다.  가장 높은 확률을 가진 단어를 예측된 중심 단어로 선택한다. Skip-gram은 같은 프로세스를 주변 단어 “I”, “love”, “chicken”이 아니라 중심단어 “eating”을 one-hot encoding을 하여 같은 프로세스로 진행된다.  GloVeWord2Vec과 함께 가장 많이 쓰이는 단어 단위 임베딩 기술이다. 기본 아이디어는 ‘단어 쌍들의 동시 발생 빈도를 기반으로 단어 벡터를 학습한다’이다. 예시를 함께 보면 훨씬 이해가 쉬울 것이다.GloVe 동시 발생 행렬 예시  텍스트를 읽고 각 단어 쌍이 얼마나 동시에 발생하는지(붙어있는지)에 대한 행렬을 만든다.  “eating”과 “chicken” 등이 몇 번 같이 나왔는지를 나타내는 동시 발생 행렬의 값을 바탕으로 각 단어의 벡터를 생성한다. 이 벡터들은 숫자들의 리스트로, 단어의 의미를 담고 있다.  벡터를 통해(수식활용) 비슷한 의미를 가진 단어들의 벡터가 서로 가깝게 위치하도록 한다.  빈도가 드문 단어쌍은 가중치를 덜 주어서 중요한 단어 쌍이 잘 반영되도록 한다.  ConclusionWord Embedding 방식인 Word2Vec과 GloVe를 통해 텍스트 데이터를 수치 데이터로 변환하여 모델의 input등으로 활용할 수 있게 되었다. Word2Vec과 GloVe는 단어 의미 벡터를 생성하는데 큰 의의가 있다.    하지만, 위 모델들은 단어의 순서를 고려하지 않는다. 즉, ‘I love eating chiken’이나 ‘I eating love chicken’이나 같은 값의 벡터로써 추출될 것이다.    따라서, 이러한 문제점을 개선하기 위해 문장 순서를 고려하는 RNN, LSTM 등의 모델이 임베딩 모델로 제안되었다. 이는 다음 글들에서 다뤄보도록 하겠다."
+  },
+  
+  {
+    "title": "Upload Waiting",
+    "url": "/posts/dd-copy-8/",
+    "categories": "etc",
+    "tags": "",
+    "date": "2024-06-13 13:00:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "",
+    "content": ""
+  },
+  
+  {
+    "title": "Upload Waiting",
+    "url": "/posts/dd-copy/",
+    "categories": "Paper Review",
+    "tags": "",
+    "date": "2019-08-08 12:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "",
+    "content": ""
+  },
+  
+  {
+    "title": "Upload Waiting",
+    "url": "/posts/dd-copy-7/",
+    "categories": "AI, Statistics",
+    "tags": "",
+    "date": "2019-08-08 12:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "",
+    "content": ""
+  },
+  
+  {
+    "title": "추천시스템(Recommender System) 개요",
+    "url": "/posts/dd-copy-5/",
+    "categories": "AI, Recommendation System",
+    "tags": "",
+    "date": "2019-08-08 12:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "  Intro  빅데이터 시대가 도래함에 따라, 사용자들이 접하는 정보의 양 또한 늘어나게 되었다. 수많은 정보들 중 본인에게 필요한 정보를 찾는 과정 안에서 드는 시간과 비용 또한 증가하게 되었다. 이를 해결하기 위해 추천시스템의 중요성이 다시한번 강조되고 있다.  추천시스템이란?  추천시스템(Recommender System)은 “다음에 어떤 행동...",
+    "content": "  Intro  빅데이터 시대가 도래함에 따라, 사용자들이 접하는 정보의 양 또한 늘어나게 되었다. 수많은 정보들 중 본인에게 필요한 정보를 찾는 과정 안에서 드는 시간과 비용 또한 증가하게 되었다. 이를 해결하기 위해 추천시스템의 중요성이 다시한번 강조되고 있다.  추천시스템이란?  추천시스템(Recommender System)은 “다음에 어떤 행동을 하면 좋을지?” 의사 결정을 지원하는 기술이다. 사실, 우리의 실생활에서도 유튜브의 맞춤 동영상 제공 알고리즘, 쿠팡의 함께 사면 좋은 뭂품 추천 등 추천시스템은 쉽게 접할 수 있다.  추천시스템의 종류  보통 서점에서 책을 사고자 할 때, 베스트셀러로 가장 잘 판매되는 책들을 나열해 놓는다. 이는 가장 쉽고 효과적인 추천 방식 중 하나이다. 이러한 방식도 좋지만, 그 책들 중 사고자 하는 책을 고를 때 책의 표지와 목차 등의 내용을 직접 확인해서 구매를 결정해야 하는 과정이 필요하다. 이러한 과정들을 대신해주는 것 또한 추천시스템의 목적이다. 쉽게 말해서 사용자(구매자)의 선호도를 파악하여 개인화된 추천을 진행해 줄 수 있다는 것이다. 서점에서 내가 좋아하는 카테고리의 책을 추천받아 선택에 드는 시간을 줄여줄 수 있는 것이다.이러한 개인화된 추천시스템을 위한 알고리즘은 크게 다음과 같이 나뉜다."
+  },
+  
+  {
+    "title": "Upload Waiting",
+    "url": "/posts/dd-copy-3/",
+    "categories": "AI, Deep Learning",
+    "tags": "",
+    "date": "2019-08-08 12:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "",
+    "content": ""
+  },
+  
+  {
+    "title": "Upload Waiting",
+    "url": "/posts/dd-copy-2/",
+    "categories": "AI, Machine Learning",
+    "tags": "",
+    "date": "2019-08-08 12:33:00 +0900",
+    
+
+
+
+
+
+    
+    "snippet": "",
+    "content": ""
+  }
+  
+]
+

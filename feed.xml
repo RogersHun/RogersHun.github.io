@@ -1,0 +1,155 @@
+
+
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>https://github.com/RogersHun/</id>
+  <title>Blog Rogers</title>
+  <subtitle>A minimal, responsive and feature-rich Jekyll theme for technical writing.</subtitle>
+  <updated>2025-02-14T19:14:46+09:00</updated>
+  <author>
+    <name>RogersHun</name>
+    <uri>https://github.com/RogersHun/</uri>
+  </author>
+  <link rel="self" type="application/atom+xml" href="https://github.com/RogersHun/feed.xml"/>
+  <link rel="alternate" type="text/html" hreflang="en"
+    href="https://github.com/RogersHun/"/>
+  <generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator>
+  <rights> © 2025 RogersHun </rights>
+  <icon>/assets/img/favicons/favicon.ico</icon>
+  <logo>/assets/img/favicons/favicon-96x96.png</logo>
+
+
+  
+  <entry>
+    <title>Python</title>
+    <link href="https://github.com/RogersHun/posts/dd-copy-6/" rel="alternate" type="text/html" title="Python" />
+    <published>2025-01-17T20:33:00+09:00</published>
+  
+    <updated>2025-01-17T20:33:00+09:00</updated>
+  
+    <id>https://github.com/RogersHun/posts/dd-copy-6/</id>
+    <content src="https://github.com/RogersHun/posts/dd-copy-6/" />
+    <author>
+      <name>RogersHun</name>
+    </author>
+
+  
+    
+    <category term="AI" />
+    
+    <category term="Python" />
+    
+  
+
+  <summary>Summary&amp;#39;s of Python basic concepts</summary>
+
+  </entry>
+
+  
+  <entry>
+    <title>Github.io snake 오류 모음</title>
+    <link href="https://github.com/RogersHun/posts/dd/" rel="alternate" type="text/html" title="Github.io snake 오류 모음" />
+    <published>2024-11-27T20:33:00+09:00</published>
+  
+    <updated>2024-11-27T20:33:00+09:00</updated>
+  
+    <id>https://github.com/RogersHun/posts/dd/</id>
+    <content src="https://github.com/RogersHun/posts/dd/" />
+    <author>
+      <name>RogersHun</name>
+    </author>
+
+  
+    
+    <category term="Debug" />
+    
+    <category term="Github" />
+    
+  
+
+  <summary>Github.io Debug</summary>
+
+  </entry>
+
+  
+  <entry>
+    <title>Github.io snake 오류 모음</title>
+    <link href="https://github.com/RogersHun/posts/dd-copy-4/" rel="alternate" type="text/html" title="Github.io snake 오류 모음" />
+    <published>2024-11-27T20:33:00+09:00</published>
+  
+    <updated>2024-11-27T20:33:00+09:00</updated>
+  
+    <id>https://github.com/RogersHun/posts/dd-copy-4/</id>
+    <content src="https://github.com/RogersHun/posts/dd-copy-4/" />
+    <author>
+      <name>RogersHun</name>
+    </author>
+
+  
+    
+    <category term="Debug" />
+    
+    <category term="Python" />
+    
+  
+
+  <summary>Github.io Debug</summary>
+
+  </entry>
+
+  
+  <entry>
+    <title>CNN (with NLP)</title>
+    <link href="https://github.com/RogersHun/posts/1dCNN/" rel="alternate" type="text/html" title="CNN (with NLP)" />
+    <published>2024-07-01T12:33:00+09:00</published>
+  
+    <updated>2024-07-01T12:33:00+09:00</updated>
+  
+    <id>https://github.com/RogersHun/posts/1dCNN/</id>
+    <content src="https://github.com/RogersHun/posts/1dCNN/" />
+    <author>
+      <name>RogersHun</name>
+    </author>
+
+  
+    
+    <category term="AI" />
+    
+    <category term="NLP" />
+    
+    <category term="CNN" />
+    
+  
+
+  <summary>CNN 1-dimentional</summary>
+
+  </entry>
+
+  
+  <entry>
+    <title>Word Embedding</title>
+    <link href="https://github.com/RogersHun/posts/Word_Embedding-copy/" rel="alternate" type="text/html" title="Word Embedding" />
+    <published>2024-06-25T12:33:00+09:00</published>
+  
+    <updated>2024-06-25T12:33:00+09:00</updated>
+  
+    <id>https://github.com/RogersHun/posts/Word_Embedding-copy/</id>
+    <content src="https://github.com/RogersHun/posts/Word_Embedding-copy/" />
+    <author>
+      <name>RogersHun</name>
+    </author>
+
+  
+    
+    <category term="AI" />
+    
+    <category term="NLP" />
+    
+  
+
+  <summary>One-hot encoding, Word Embedding(CBOW &amp;amp; Skip-gram), GloVe</summary>
+
+  </entry>
+
+</feed>
+
+
