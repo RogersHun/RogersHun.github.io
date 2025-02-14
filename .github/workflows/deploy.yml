@@ -3,25 +3,27 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - main # 또는 배포할 브랜치 이름
+      - main # 또는 gh-pages 등 사용 중인 브랜치
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest # self-hosted 러너라면 'self-hosted'로 변경
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Ruby manually
+      # ✅ 여기에서 ruby-build 업데이트 추가
+      - name: Update ruby-build
         run: |
-          sudo apt update
-          sudo apt install -y rbenv ruby-build
-          rbenv install 3.1.4
-          rbenv global 3.1.4
-          echo "PATH=$HOME/.rbenv/bin:$HOME/.rbenv/shims:$PATH" >> $GITHUB_ENV
+          git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+          sudo apt update && sudo apt install --only-upgrade ruby-build
 
-      - name: Check Ruby version
-        run: ruby -v
+      # ✅ Ruby 설정 (setup-ruby 실행 전에 ruby-build를 업데이트해야 함)
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1.4 # 원하는 Ruby 버전
 
       - name: Install dependencies
         run: bundle install
@@ -30,7 +32,7 @@ jobs:
         run: bundle exec jekyll build
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./_site
