@@ -2,7 +2,7 @@
 title: Python 오류모음
 description: For Python Debug
 date: 2025-04-23 11:33:00
-categories: [Debug, Python]
+categories: [Debug, Python_Debug]
 pin: true
 math: true
 mermaid: true
