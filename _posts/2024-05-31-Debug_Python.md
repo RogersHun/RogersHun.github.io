@@ -10,9 +10,7 @@ mermaid: true
 ># Python 오류 정리
 Python에 관련한 오류 정리
 
-<details>
-<summary>시각화 한글 인식 오류</summary>
-
+> ## 시각화 한글 인식 오류
 ```python
 """
 시각화 출력 시 ㅁ로 뜨는 현상
@@ -51,5 +49,3 @@ plt.ylabel('값2')
 plt.grid(True)
 plt.show()
 ```
-
-</details>
