@@ -771,13 +771,15 @@ $btn-mb: 0.5rem;
       @extend %clickable-transition;
       @extend %sidebar-link-hover;
 
-      color: rgba(246, 254, 255, 99%);
+      color: var(--site-title-color);
     }
   }
 
   .site-subtitle {
     font-size: 95%;
-    color: rgba(246, 254, 255, 99%);
+    font-weight: 600;
+    color: var(--site-subtitle-color);
+    text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
     margin-top: 0.25rem;
     word-spacing: 1px;
     -webkit-user-select: none;
