@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="410" viewBox="0 0 960 410" role="img" aria-label="PReQ 추론 흐름: embedding 갱신과 캐시를 사용하는 추천 요청">
+<style>text{font-family:Arial,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;fill:#243449} .muted{fill:#5b6b7c} .label{font-size:18px;font-weight:700} .small{font-size:15px}</style>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#8292a5"/></marker></defs>
+<rect width="960" height="410" rx="18" fill="#f5f7fb"/>
+<text x="32" y="42" font-size="25" text-anchor="start" font-weight="700">같은 모델 안에서도, 갱신과 요청의 비용은 다르다</text>
+<text x="32" y="76" font-size="14" text-anchor="start" style="fill:#4565a0" font-weight="700">EMBEDDING REFRESH</text>
+<rect x="32" y="96" width="179" height="86" rx="12" fill="#fff" stroke="#d5dde8"/>
+<text x="121.5" y="127" font-size="18" text-anchor="middle" font-weight="700">Lookup</text>
+<text x="121.5" y="153" font-size="14" text-anchor="middle" style="fill:#5b6b7c">압축 표현 조회·합산</text>
+<rect x="271" y="96" width="179" height="86" rx="12" fill="#fff" stroke="#d5dde8"/>
+<text x="360.5" y="127" font-size="18" text-anchor="middle" font-weight="700">GatedFusion</text>
+<text x="360.5" y="153" font-size="14" text-anchor="middle" style="fill:#5b6b7c">텍스트·이미지 혼합</text>
+<rect x="510" y="96" width="179" height="86" rx="12" fill="#fff" stroke="#d5dde8"/>
+<text x="599.5" y="127" font-size="18" text-anchor="middle" font-weight="700">LightGCN</text>
+<text x="599.5" y="153" font-size="14" text-anchor="middle" style="fill:#5b6b7c">그래프 정보 반영</text>
+<rect x="749" y="96" width="179" height="86" rx="12" fill="#eaf0fd" stroke="#d5dde8"/>
+<text x="838.5" y="127" font-size="18" text-anchor="middle" font-weight="700">Embedding 캐시</text>
+<text x="838.5" y="153" font-size="14" text-anchor="middle" style="fill:#5b6b7c">계산 결과 보관</text>
+<path d="M211,139 L263,139" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M450,139 L502,139" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M689,139 L741,139" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="32" y="239" font-size="14" text-anchor="start" style="fill:#27796d" font-weight="700">CACHED REQUEST</text>
+<rect x="32" y="262" width="179" height="86" rx="12" fill="#ffffff" stroke="#d5dde8"/>
+<text x="121.5" y="293" font-size="18" text-anchor="middle" font-weight="700">사용자 요청</text>
+<text x="121.5" y="319" font-size="14" text-anchor="middle" style="fill:#5b6b7c">기본 batch: 32명</text>
+<rect x="350" y="262" width="230" height="86" rx="12" fill="#e7f4ef" stroke="#d5dde8"/>
+<text x="465.0" y="293" font-size="18" text-anchor="middle" font-weight="700">점수 계산 · Top-K</text>
+<text x="465.0" y="319" font-size="14" text-anchor="middle" style="fill:#5b6b7c">캐시된 embedding 사용</text>
+<rect x="730" y="262" width="198" height="86" rx="12" fill="#ffffff" stroke="#d5dde8"/>
+<text x="829.0" y="293" font-size="18" text-anchor="middle" font-weight="700">추천 결과</text>
+<text x="829.0" y="319" font-size="14" text-anchor="middle" style="fill:#5b6b7c">상위 아이템 반환</text>
+<path d="M211,305 L342,305" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M580,305 L722,305" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M838,182 L838,218 L465,218 L465,254" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="32" y="386" font-size="16" text-anchor="start" style="fill:#5b6b7c">측정 범위: 전체 embedding 갱신 / 캐시를 사용하는 요청을 구분</text>
+</svg>

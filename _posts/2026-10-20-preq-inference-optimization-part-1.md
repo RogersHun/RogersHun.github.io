@@ -1,6 +1,6 @@
 ---
-title: "PReQ 추론 최적화 Part 1: Profiling에서 FX Graph rewrite와 AMP까지"
-description: "PReQ 배포 모델에 Lookup 재구성, Auto-Tuning, INT8, torch.compile, FX rewrite, SQLite 캐시, BF16 AMP를 적용하고 품질과 CPU 지연을 비교한 실험 기록"
+title: "PReQ 추론 최적화 회고 Part 1: 압축 이후의 실행 비용을 들여다보다"
+description: "압축된 추천 모델의 실행 비용을 측정하고 Lookup, Quantization, 컴파일러, FX Graph rewrite, Database, AMP를 적용하며 배운 것들"
 date: 2026-10-20 00:00:00 +0900
 categories: [AI, Inference Optimization]
 tags: [pytorch, profiling, quantization, torch-compile, torch-fx, auto-tuning, sqlite, mixed-precision]
@@ -9,348 +9,162 @@ math: false
 mermaid: false
 ---
 
-기존 연구에서 모델을 압축한 뒤, 실제 배포 모델의 추론 과정에는 어떤 개선 여지가 있는지 궁금해졌다. 저장 공간이 작아져도 실행이 빨라진다는 보장은 없기 때문이다.
+모델을 작게 만드는 연구를 하다 보면 저장 크기와 추천 정확도에 먼저 눈이 간다. 나 역시 PReQ에서 압축된 표현을 추천에 활용하는 방법을 다뤘다. 그런데 배포 모델을 놓고 보니, 아직 답하지 않은 질문이 하나 남아 있었다.
 
-PReQ 배포 체크포인트를 기준으로 CPU 추론을 측정하고, Lookup 실행 구조·설정·정밀도·컴파일 경로를 바꿔 보았다. 기존 라이브러리 적용에서 한 단계 더 나아가 작은 FX Graph rewrite pass와 측정 이력 Database도 구현했다. 이 글에서는 그 과정을 **Part 1**으로 정리한다.
+**이 모델은 실제 하드웨어에서 시간을 어디에 쓰고 있을까?**
 
-결과가 모두 속도 향상으로 이어지지는 않았다. INT8·BF16과 직접 작성한 rewrite는 해당 실행에서 원본보다 느렸다. 반면 실행 설정 탐색과 TorchInductor 적용에서는 소폭의 개선을 관찰했다. 무엇을 적용했는지와 함께, 실제 연산이 바뀌었는지·추천 결과가 유지됐는지·어떤 후보를 제외했는지를 기록했다.
+압축률만으로는 그 답을 알 수 없었다. 저장할 데이터가 줄어도 이를 꺼내고, 섞고, 그래프 위에서 계산하는 과정에는 다른 비용이 들기 때문이다. 그래서 이번에는 모델을 새로 학습하는 대신, 이미 학습한 모델의 실행 과정을 들여다보기로 했다.
 
-## 1. 대상 모델과 측정 범위
+Profiling으로 시작해 Lookup을 바꾸고, 실행 설정을 탐색하고, INT8과 BF16을 적용했다. 컴파일러를 사용해 본 뒤에는 작은 그래프 변환도 직접 구현했다. 반복 측정을 관리하는 Database까지 구성한 이 여덟 번의 실험을 **Part 1**으로 묶었다.
 
-PReQ는 압축된 텍스트·이미지 표현을 추천에 활용한다. 이번 배포 모델의 계산 흐름을 단순화하면 다음과 같다.
+결과부터 말하면, 일부 설정과 컴파일러 적용에서는 개선이 있었지만 더 느려진 시도도 많았다. 이번 글은 그 차이를 확인하고 판단 기준을 만들어 간 기록이다.
 
-```text
-RQ code + folded codebook
-    → Lookup · stage 합산
-    → 사용자/아이템별 GatedFusion
-    → ID embedding과 혼합
-    → 3-layer LightGCN sparse propagation
-    → 최종 embedding 캐시
-    → 사용자·아이템 점수 계산과 Top-K 추천
-```
+## 먼저, 무엇을 빠르게 만들려는지 정했다
 
-`folded codebook`은 학습된 projection을 미리 반영한 기존 배포 형식이다. 이 folding 자체를 이번 실험에서 새로 개발한 것은 아니다. 사용자 5,753명, 아이템 9,090개, graph embedding 64차원의 동일한 체크포인트를 사용했다. Part 1에서는 재학습하지 않았다.
+PReQ는 압축된 텍스트·이미지 표현과 사용자·아이템의 관계를 함께 활용하는 추천 모델이다. 이번 실험에서는 사용자 5,753명과 아이템 9,090개를 포함한 동일한 배포 체크포인트를 사용했다.
 
-추론 시간을 두 종류로 구분했다.
+내부에는 여러 단계가 있다. **Lookup**으로 압축 표현을 꺼내고, **GatedFusion**에서 텍스트와 이미지를 섞는다. 이후 **LightGCN**이 사용자·아이템의 연결 정보를 반영하고, 최종 embedding으로 추천 점수를 계산한다.
 
-- **Embedding refresh:** 모든 사용자·아이템의 최종 embedding을 다시 계산하는 시간.
-- **Cached request:** 이미 계산한 embedding으로 점수와 Top-K를 구하는 시간. 기본 요청 batch는 사용자 32명이다.
+![PReQ의 embedding 갱신과 캐시 기반 추천 요청 흐름]({{ '/assets/img/preq-part1/inference-flow.svg' | relative_url }})
+_전체 embedding을 다시 만드는 과정과, 만들어 둔 embedding으로 추천하는 과정은 비용 구조가 다르다._
 
-전체 embedding을 매 요청마다 갱신하는 서비스와, 갱신 결과를 캐시해 여러 요청에 사용하는 서비스는 비용 구조가 다르다. 따라서 refresh 시간의 개선을 그대로 온라인 요청 지연 개선으로 해석하지 않았다.
+여기서 먼저 구분한 것은 **embedding 갱신**과 **추천 요청**이었다. 전자는 모든 사용자와 아이템의 표현을 다시 계산한다. 후자는 캐시된 표현을 가져와 점수를 계산하고, 상위 아이템인 Top-K를 고른다.
 
-### 비교할 때 고정한 것과 주의할 것
+첫 측정에서 전체 갱신은 평균 약 **48.98 ms**, 캐시를 사용한 사용자 32명 묶음의 추천 요청은 약 **1.31 ms**였다. 같은 모델 안에서도 어떤 작업을 기준으로 삼느냐에 따라 중요한 부분이 달랐다.
 
-비교는 각 Colab 실행 안에서 같은 모델과 split을 사용해 수행했다. Profiler와 dtype 확인 hook은 반복 지연 측정에서 분리했고, 여러 설정의 실행 순서를 섞었다. 탐색 이후 별도 확인 측정을 두는 실험도 구성했다.
+이후에는 주로 전체 embedding 갱신 비용을 줄이는 데 집중했다. 다만 이 시간이 줄었다고 온라인 요청의 지연도 같은 비율로 줄었다고 해석하지는 않았다.
 
-**서로 다른 노트북 실행의 절대 시간을 이어 붙여 speedup을 계산하지 않았다.** Colab의 CPU와 공유 부하는 달라질 수 있다. 아래 각 표는 해당 실험 안의 비교이며, 서로 다른 단계의 개선율을 합산할 수 없다.
+## 1. 측정부터 해 보니, 작은 연산이 반복되고 있었다
 
-품질은 같은 history mask와 `torch.topk` evaluator로 비교했다. 이 evaluator는 논문의 evaluator와 동일하지 않으며, 원본 입력 특징이 train 데이터만으로 생성됐는지도 이번 추론 실험에서 별도로 검증하지 않았다. 따라서 여기의 NDCG·Recall은 구현 변경의 영향을 살피는 비교 지표로 사용한다. 새로운 추천 정확도 성과를 주장하는 실험은 아니다.
+첫 단계는 **PyTorch Profiler**였다. 연산별 시간과 메모리 할당을 확인하고, Lookup·Fusion·그래프 계산처럼 의미 있는 구간으로 나누어 살폈다. 측정용 이름을 추가한 모델이 원본과 같은 출력을 내는지도 먼저 확인했다.
 
-## 2. Part 1 실험 구성
+눈에 들어온 것은 반복되는 작은 호출이었다. 기존 Lookup은 압축 단계마다 텍스트와 이미지 표현을 각각 꺼내 더했다. 한 번의 계산은 작아도 전체 사용자와 아이템을 처리하면 호출 횟수가 많아졌다.
 
-| 단계 | 질문 | 구현·측정한 내용 |
-|---|---|---|
-| 01 Baseline | 어디에 시간이 드는가? | 연산·구간별 Profiling, 정상 실행 지연, 메모리 관찰 |
-| 02 Lookup | 반복 Lookup을 묶으면 달라지는가? | sequential / batched_ordered / batched_reduce 비교 |
-| 03 Auto-Tuning | 실행 설정 중 무엇이 유리한가? | mode·chunk·CPU thread 조합 탐색과 확인 측정 |
-| 04 INT8 | 일부 Linear를 양자화하면 유리한가? | Projection·Gate별 Dynamic Quantization |
-| 05 Compiler | 기존 컴파일러를 적용하면 달라지는가? | eager / aot_eager / TorchInductor 비교 |
-| 06 FX rewrite | 그래프를 직접 바꿔 볼 수 있는가? | 병렬 Linear를 packed batched GEMM으로 변환 |
-| 07 Database | 이미 측정한 설정을 다시 측정해야 하는가? | SQLite 이력·index·캐시 무효화·재검증 |
-| 08 AMP | 낮은 정밀도를 어디에 적용할 것인가? | BF16 autocast와 제한된 정책 자동 선택 |
+그래서 여러 단계의 Lookup을 한 번에 수행하도록 바꿨다. 단계마다 나뉘어 있던 codebook, 즉 대표 벡터를 모아 둔 표를 펼치고, 각 단계가 올바른 위치를 조회하도록 index에 offset을 더하는 방식이다. 합산 순서를 유지하는 버전과 한꺼번에 합산하는 버전도 나누어 비교했다.
 
-## 3. 01 — Baseline Profiling
+Profiler에서 변화는 분명했다. 전체 갱신의 `embedding` 호출은 **240회에서 30회**로 줄었고, `clone`과 `contiguous` 호출도 사라졌다. 사용자 5,753명의 추천 Top-K는 그대로였다.
 
-처음에는 모델 변경 없이 측정 코드를 추가했다. 기준 모델과 구간 이름을 추가한 모델의 최대 출력 오차는 0이었다.
+그런데 전체 실행 시간의 개선은 작고 불안정했다. 묶음 합산 방식의 block별 중앙값 기준 speedup은 약 **1.039배**였지만, 평균과 긴 지연 구간에서는 변동이 컸다. 순서를 보존한 다른 방식은 오히려 느렸다.
 
-해당 실행에서 전체 refresh 평균은 약 **48.98 ms**, cached request 평균은 약 **1.31 ms**였다. 모델 tensor의 논리적 크기는 약 **5.98 MiB**, 최종 embedding 캐시는 약 **3.62 MiB**였다.
+연산을 묶으면서 한 번에 만들어지는 중간 tensor도 생겼다. 이 실험에서 배운 첫 번째는, **호출 수를 줄였다는 사실과 실행이 빨라졌다는 결론 사이에는 측정이 더 필요하다**는 점이었다.
 
-이 크기는 프로세스의 최대 RAM이 아니다. 그래프 자료구조, 중간 tensor, Python 객체, allocator 등은 별도로 봐야 한다. Profiler에 표시되는 순할당량도 peak memory와 다르다.
+## 2. 구현만큼 실행 설정도 중요했다
 
-Profiler에서는 Lookup과 Fusion, sparse graph propagation에 비용이 분포했다. 특히 반복적인 `embedding`, `clone`, `contiguous` 호출을 관찰해 Lookup 실행 구조를 다음 실험 대상으로 정했다. Profiler가 들어간 구간 시간은 계측 비용을 포함하므로 정상 실행의 refresh 시간과 직접 합산하지 않았다.
+다음에는 코드 구조만 보지 않고 **chunk 크기와 CPU thread 수**를 함께 바꿨다. chunk는 한 번에 처리하는 데이터 묶음의 크기다. 너무 작으면 호출이 늘고, 너무 크면 중간 데이터와 연산의 처리 방식이 달라진다.
 
-## 4. 02 — Lookup을 묶어서 실행하기
+Lookup 방식 두 가지, chunk 세 가지, thread 수 두 가지를 조합해 12개 설정을 탐색했다. 출력과 추천 결과를 확인한 뒤, 탐색에서 고른 후보를 새로운 측정 구간에서 다시 비교했다. 탐색할 때 우연히 빨랐던 설정을 곧바로 채택하지 않기 위해서였다.
 
-기존 코드는 RQ stage마다 텍스트와 이미지 codebook을 각각 조회하고 더했다. 여러 작은 호출을 한 번에 처리할 수 있도록 stage별 codebook을 펼치고 index에 offset을 더했다.
+해당 실행에서 선택된 설정은 **batched_reduce · chunk 1024 · thread 1**이었다. 기준은 sequential · chunk 1024 · thread 2였다.
 
-```python
-# 개념을 보여 주기 위한 축약 코드
-# codes: [batch, stages], books: [stages, codewords, dim]
-offset = torch.arange(stages, device=codes.device) * codewords
-flat_books = books.reshape(stages * codewords, dim)
-looked_up = F.embedding(codes + offset, flat_books)
-features = looked_up.sum(dim=1)
-```
+| 확인 측정 | 기준 설정 | 선택 설정 |
+|---|---:|---:|
+| 평균 갱신 시간 | 75.94 ms | 69.11 ms |
+| P95 갱신 시간 | 100.55 ms | 81.57 ms |
 
-비교한 경로는 세 가지다.
+평균은 약 **9.0%**, P95는 약 **18.9%** 줄었다. P95는 측정값의 95%가 그 시간 안에 들어온다는 뜻으로, 평균만 볼 때 놓칠 수 있는 긴 지연을 살피는 지표다. 선택 설정은 다섯 번의 확인 block에서 모두 기준보다 빨랐다.
 
-- `sequential`: stage별 Lookup과 합산.
-- `batched_ordered`: Lookup은 묶되 합산 순서는 유지.
-- `batched_reduce`: Lookup을 묶고 `sum`으로 stage를 합산.
+다만 Lookup 방식과 thread 수가 함께 달라졌으므로, 개선을 Lookup 하나의 효과로 설명할 수는 없었다. CPU를 더 많이 사용하도록 설정한다고 항상 유리한 것도 아니었다.
 
-전체 refresh Profiler에서 `embedding` 호출은 **240회 → 30회**, `clone`·`contiguous`는 각각 **240회 → 0회**로 줄었다. 추천 Top-K는 5,753명 모두 동일했다.
+이후 정밀도나 컴파일러를 비교할 때는 실행 설정을 고정했다. 한 번에 바꾸는 조건을 줄여야 결과를 해석하기 쉬웠다.
 
-하지만 호출 감소가 곧 전체 가속을 뜻하지는 않았다. `batched_reduce`의 refresh paired median speedup은 약 **1.039배**였고, 다른 요약 지표와 tail에는 변동이 컸다. `batched_ordered`는 약 0.957배로 오히려 느렸다. 이 단계만으로 안정적인 전체 모델 가속을 주장하지 않았다.
+## 3. INT8과 BF16은 적용에 성공했지만, 더 느렸다
 
-묶어서 조회한 텍스트·이미지 tensor 두 개의 논리적 크기는 4 MiB였다. 호출을 줄이는 대신 중간 tensor가 생기는 trade-off도 기록했다. 이 값 역시 프로세스 최대 메모리를 뜻하지 않는다.
+낮은 정밀도로 계산하면 모델이 빨라질 것이라는 기대는 자연스럽다. 하지만 이미 작은 연산에 적용했을 때도 효과가 있을지는 직접 확인해야 했다.
 
-## 5. 03 — 실행 설정 Auto-Tuning
+먼저 **INT8 Dynamic Quantization**을 Fusion 내부의 일부 Linear에 적용했다. 특징을 변환하는 Projection만 바꾸거나, 텍스트·이미지 혼합 비율을 정하는 Gate만 바꾸거나, 두 부분 모두 바꾸는 방식이었다. 실제 INT8 연산이 호출되는지와 저장 후 다시 불러왔을 때 결과가 유지되는지도 확인했다.
 
-Lookup 방식만 바꾸는 대신 다음 조합을 탐색했다.
+나중에는 **BF16 AMP**도 비교했다. BF16은 16비트 부동소수점 형식이고, AMP는 일부 계산을 낮은 정밀도로 수행하면서 다른 계산은 FP32로 유지하는 방식이다. 이번에는 Projection과 Gate의 계산만 선택적으로 바꾸고, normalization과 그래프 계산 등은 FP32로 남겼다.
 
-| 항목 | 후보 |
+두 실험 모두 의도한 정밀도로 연산이 실행되는 것은 확인했다. 그러나 전체 embedding 갱신 시간은 늘었다.
+
+![INT8, 컴파일러, BF16의 독립 실험별 평균 갱신 시간 비교]({{ '/assets/img/preq-part1/latency-comparison.svg' | relative_url }})
+_각 패널은 별도 Colab 실행이며 막대의 눈금도 다르다. 패널 사이의 절대 시간을 비교하거나 개선율을 합산하지 않았다._
+
+INT8 실험에서는 FP32가 평균 **35.02 ms**, Fusion Linear를 모두 INT8로 바꾼 경우가 **43.31 ms**였다. BF16 실험에서는 FP32가 **78.69 ms**, Fusion Linear를 모두 BF16으로 계산한 경우가 **234.10 ms**였다.
+
+왜 느려졌는지는 여기서 확정하지 않았다. 작은 행렬, CPU의 지원 방식, 정밀도를 바꾸는 비용, 구간별 autocast 진입 비용 등이 원인 후보다. 낮은 정밀도의 장점보다 추가 비용이 더 클 수 있다는 점은 결과로 확인할 수 있었다.
+
+### 품질이 허용 범위라는 것과 결과가 같다는 것은 달랐다
+
+정밀도를 바꾸면 작은 수치 오차가 생길 수 있다. 따라서 오차가 무조건 0이어야 한다고 요구하는 대신, **Validation NDCG 상대 하락 1% 이내**라는 기준을 먼저 정했다. NDCG는 추천한 아이템의 순서를 반영하는 품질 지표다.
+
+INT8과 BF16 후보는 이 기준을 통과했다. BF16의 상대 하락은 Projection 약 0.027%, Gate 0%, 두 부분 모두 적용했을 때 약 0.019%였다. 그렇다고 사용자별 추천 목록까지 동일한 것은 아니었다. 비슷한 점수를 가진 아이템들의 순서나 포함 여부는 일부 바뀌었다.
+
+BF16 실험에서는 이 품질 조건을 통과한 정책 중 실행 시간을 기준으로 후보를 고르는 작은 자동 선택기도 구현했다. 결과는 **FP32 유지**였다. 탐색부터 FP32가 가장 빨랐기 때문에, 이 실행에서는 BF16 후보와 추가 비교를 진행하지 않고 FP32를 재측정했다.
+
+INT8에서는 저장 크기도 확인했다. 하지만 Linear weight가 원본 모델 tensor에서 차지하는 비율은 약 2.1%에 불과했다. 전체 체크포인트의 감소는 최대 약 1.48%였다. BF16 AMP는 저장 가중치를 FP32로 유지했으므로 체크포인트 압축 실험과도 구분했다.
+
+## 4. 컴파일러를 적용한 뒤, 그래프를 직접 바꿔 봤다
+
+정밀도 실험과 별도로 **torch.compile**을 적용했다. 대상으로 정한 것은 dense 연산이 모여 있는 사용자·아이템의 GatedFusion이었다. Lookup과 sparse 그래프 계산까지 한꺼번에 컴파일하지는 않았다.
+
+**TorchDynamo**가 연산을 그래프로 포착하고, **TorchInductor**가 이를 실행할 코드를 만드는 경로를 사용했다. 중간에 그래프가 끊기는 Graph break가 있는지 확인하고, 실제 backend에 전달된 그래프도 기록했다.
+
+해당 실행에서 평균 갱신 시간은 기존 실행 방식인 eager **62.93 ms**에서 TorchInductor **60.20 ms**로 약 **4.3% 줄었다**. 세 측정 block에서 모두 기준보다 빨랐고, valid/test 각각 5,753명의 추천 Top-K와 NDCG·Recall은 동일했다.
+
+첫 실행에는 컴파일을 포함해 약 **27.9초**가 필요했다. 반복 실행에서 얻는 이득과 최초 준비 비용은 따로 봐야 했다. 한 번 실행하고 끝내는 작업과, 같은 모델을 계속 사용하는 서비스의 판단이 달라질 수 있는 부분이다.
+
+### 라이브러리를 사용하는 것에서, 작은 변환을 직접 구현하는 것으로
+
+다음에는 **torch.fx**로 작은 Graph rewrite pass를 구현했다. pass는 그래프에서 특정 패턴을 찾아 다른 실행 구조로 바꾸는 처리다.
+
+대상은 텍스트와 이미지에 각각 적용하던 두 Projection이었다. 가중치를 미리 묶고, 두 입력을 하나의 batch로 구성해 **batched GEMM**으로 처리하도록 바꿨다. GEMM은 행렬 곱셈을 뜻하며, 여기서는 `bmm` 연산을 사용했다.
+
+![두 Projection을 하나의 batched GEMM으로 재구성한 핵심 구조]({{ '/assets/img/preq-part1/projection-rewrite.svg' | relative_url }})
+_FX 그래프의 변경 부분을 단순화했다. 하나의 박스로 묶여도 입력 stack과 bias 처리 같은 내부 비용은 남는다._
+
+패턴을 발견했다고 바로 바꾸지는 않았다. 두 Linear의 크기·dtype·device와 입력 의존성을 검사했고, 변환 후에는 그래프 연결과 실행 코드를 갱신했다. 전체 chunk뿐 아니라 마지막의 작은 chunk에서도 결과를 확인했다.
+
+Profiler에서는 Linear 호출이 **60회에서 30회**로 줄고, `bmm`과 `stack`이 각각 15회 생겼다. Colab에서는 embedding·점수 비교 오차가 0으로 기록됐고 추천 결과도 유지됐다.
+
+그런데 평균 갱신 시간은 원본 **87.04 ms**에서 변환 후 **98.08 ms**로 늘었다. 직접 작성한 pass는 의도대로 동작했지만, 해당 환경에서 채택할 성능상의 근거는 없었다.
+
+이 경험은 기존 컴파일러를 적용한 경험과 구분할 수 있었다. 내가 직접 구현한 것은 **제한된 Projection 패턴의 그래프 변환**이다. 새로운 low-level kernel이나 Quantization fusion을 개발한 것은 아니다.
+
+## 5. 반복 측정을 저장했더니, 재사용 조건이 더 중요해졌다
+
+설정을 바꾸며 실험하다 보니, 같은 조합을 다시 측정하는 비용도 눈에 들어왔다. 이미 측정한 설정의 기록을 활용할 수 있도록 **SQLite 기반 측정 이력 Database**를 만들었다.
+
+모델과 설정만 같으면 재사용하도록 만들지는 않았다. 체크포인트와 split, 코드, CPU와 PyTorch 환경, 측정 조건을 함께 구분했다. 기록의 유효 시간인 **TTL**도 두었다. 현재 기준 모델인 baseline을 짧게 측정한 **anchor**가 과거와 크게 달라졌다면 다시 측정하도록 했다.
+
+캐시가 적중해도 출력과 Validation 추천은 새로 확인했다. 과거 기록이 제안한 후보를 최종 채택할 때도 baseline과 함께 새로 측정하도록 구성했다.
+
+Colab 결과는 예상과 다른 방향으로 유용했다. 첫 탐색에 이어 바로 실행한 두 번째 탐색에서 **12개 설정 모두 캐시 재사용을 거절**했다.
+
+첫 baseline anchor는 **153.12 ms**, 두 번째는 **68.83 ms**였다. 약 2.22배 차이로, 설정한 허용 범위 1.25배를 넘었다. 기록이 없어서가 아니라, 환경 변화가 커서 `anchor_drift`로 재측정한 것이다.
+
+탐색 시간은 68.07초에서 54.83초로 줄었지만, 이를 캐시 덕분이라고 쓸 수는 없었다. 두 번 모두 지연 샘플 180개를 새로 측정했고, 생략한 측정은 0회였기 때문이다.
+
+Database 저장과 index 조회, 캐시 무효화는 확인했다. 최종 후보는 별도 확인 기준을 통과하지 못해 baseline을 유지했다. 이번 실행에서는 캐시 가속보다 **환경이 달라졌을 때 과거 기록을 그대로 믿지 않는 동작**을 검증한 셈이다.
+
+## Part 1을 마치며
+
+여덟 번의 실험에서 가장 오래 남은 것은 특정 기법의 우열보다 **변경을 판단하는 순서**였다.
+
+먼저 측정 범위를 정하고, 연산이 의도대로 바뀌었는지 확인한다. 그다음 출력과 추천 품질을 보고, 마지막으로 정상 실행 시간을 비교한다. 같은 코드라도 실행 설정과 하드웨어에 따라 결론은 달라질 수 있었다.
+
+Lookup과 FX rewrite에서는 호출 감소가 전체 가속을 보장하지 않았다. INT8과 BF16에서는 작은 연산에 낮은 정밀도를 적용하는 비용을 관찰했다. 컴파일러에서는 반복 실행의 이득과 최초 준비 비용을 구분했고, Database에서는 재사용보다 무효화 조건이 중요한 상황을 만났다.
+
+이번 Part 1에서 수행한 것은 다음과 같다.
+
+| 영역 | 실제로 수행한 내용 |
 |---|---|
-| Lookup | sequential, batched_reduce |
-| chunk | 256, 1024, 4096 |
-| CPU threads | 1, 2 |
+| 측정 | PyTorch Profiler, 실행 구간과 지연·메모리 지표 구분 |
+| 실행 구조 | Lookup batching, 제한된 FX Graph rewrite pass 구현 |
+| 탐색 | 실행 설정 탐색, 확인 측정, 정밀도 정책 자동 선택 |
+| 정밀도 | 선택적 INT8 Dynamic Quantization, CPU BF16 AMP |
+| 컴파일러 | TorchDynamo·TorchInductor 적용과 그래프 포착 분석 |
+| 이력 관리 | SQLite 저장·index 조회·캐시 재사용 조건과 무효화 |
 
-출력·추천 결과 검증을 통과한 설정만 측정하고, 탐색에서 고른 후보는 새로운 confirmation block에서 다시 비교했다. 채택 규칙에는 paired speedup, block별 승리 횟수, 평균과 P95를 사용했다. 이는 작은 유한 격자 탐색이며 DP나 RL은 아니다.
+Part 2에서는 이 기반 위에서 추가 최적화 문제와 하드웨어 실행 범위를 확장하려 한다. 아직 다루지 않은 DP/RL, 직접 작성하는 CUDA·NEON 커널, Multi-device allocation은 그다음 과제로 남겼다.
 
-해당 실행에서는 `batched_reduce / chunk 1024 / threads 1`이 선택됐다.
+### 수치를 읽을 때의 범위
 
-| Confirmation | 기준 설정 | 선택 설정 |
-|---|---:|---:|
-| 평균 refresh | 75.94 ms | 69.11 ms |
-| P95 refresh | 100.55 ms | 81.57 ms |
+본문의 개선과 지연 증가는 각각 **동일한 Colab 실행 안에서 비교한 결과**다. 서로 다른 단계의 수치로 누적 개선율을 계산하지 않았다. 특히 공유 CPU 부하가 변하므로 대상 배포 환경에서의 재측정이 필요하다.
 
-평균은 약 **9.0%**, P95는 약 **18.9%** 감소했고, 다섯 confirmation block에서 모두 기준보다 빨랐다. 기준은 `sequential / chunk 1024 / threads 2`였다. Lookup 방식과 thread 수가 함께 바뀌었으므로 개선 전체를 Lookup 하나의 효과로 돌릴 수 없다.
+추천 품질은 동일한 history mask와 `torch.topk` evaluator로 비교했다. 논문 evaluator와 완전히 같은 평가가 아니며, 원본 특징 생성 단계의 데이터 분리도 이번 추론 실험에서 새로 검증한 범위는 아니다. 따라서 새로운 추천 정확도 성과보다 **실행 변경에 따른 품질 변화**를 확인한 기록으로 해석한다. 메모리 역시 tensor 크기, Profiler 순할당량, 프로세스 최대 메모리를 구분했다.
 
-탐색 중 baseline anchor의 큰 변화도 관찰했다. 독립된 머신·시간대까지 포함한 성능 보장은 아니며, 이후 실험에서는 설정을 고정해 다른 변경의 영향을 비교했다.
-
-## 6. 04 — 선택적 INT8 Dynamic Quantization
-
-PReQ에서 이미 사용하는 RQ code와, 이번에 Linear에 적용한 INT8 Quantization은 서로 다른 대상이다. 기존 code·codebook을 바꾸지 않고 Fusion 안의 Linear만 선택적으로 변환했다.
-
-- Projection Linear 4개만 INT8.
-- Gate Linear 4개만 INT8.
-- 위 Linear 8개 모두 INT8.
-- FP32 기준.
-
-x86 backend에서 실제 `quantized::linear_dynamic` 호출을 확인했다. 변환된 state를 저장·재로딩한 출력도 검증했다.
-
-| 정책 | 평균 refresh | 체크포인트 크기 |
-|---|---:|---:|
-| FP32 | 35.02 ms | 5.983 MiB |
-| Projection INT8 | 37.41 ms | 5.939 MiB |
-| Gate INT8 | 36.54 ms | 5.939 MiB |
-| 전체 Fusion Linear INT8 | 43.31 ms | 5.895 MiB |
-
-세 정책 모두 미리 정한 **Validation NDCG 상대 하락 1% 이내** 기준을 통과했다. 그러나 전체 refresh는 빨라지지 않아 FP32를 유지했다. 품질 기준을 통과했다고 추천 목록까지 완전히 같은 것은 아니다.
-
-원본 모델 tensor 약 5.98 MiB 중 FP32 Linear weight는 약 0.125 MiB, 약 2.1%였다. 일부 Linear만 압축했기 때문에 전체 체크포인트 감소도 최대 약 **1.48%**였다. 작은 행렬과 동적 변환 비용은 속도 저하의 원인 후보지만, 이 실험만으로 원인을 확정하지 않았다.
-
-여기서는 기존 `torch.ao.quantization.quantize_dynamic` 호환 API를 사용했다. 실행 당시 deprecation 경고도 기록했으며, 후속 구현에서는 PyTorch의 torchao 이전 안내를 확인할 필요가 있다.
-
-## 7. 05 — TorchDynamo·TorchInductor 적용
-
-다음으로 dense 연산이 모여 있는 사용자·아이템의 `GatedFusion`만 `torch.compile`로 감쌌다. Lookup, sparse LightGCN, 점수 GEMM은 eager FP32로 유지했다.
-
-```python
-compiled_fusion = torch.compile(
-    fusion,
-    backend="inductor",
-    fullgraph=True,
-    dynamic=True,
-)
-```
-
-`fullgraph=True`는 지정한 Fusion 모듈 내부에서 그래프가 끊기면 실패하도록 하는 설정이다. 전체 모델에 Graph break가 없다는 뜻은 아니다.
-
-실험에서는 backend를 감싼 기록 함수로 실제 전달된 FX 그래프를 저장했다. `torch._dynamo.explain`의 진단용 그래프와 실제 backend 호출 기록을 구분했다.
-
-| 경로 | 평균 refresh |
-|---|---:|
-| eager | 62.93 ms |
-| aot_eager | 67.55 ms |
-| TorchInductor | 60.20 ms |
-
-TorchInductor는 해당 실행에서 평균 refresh가 약 **4.3% 감소**했고, 세 측정 block에서 모두 eager보다 빨랐다. refresh와 요청을 함께 실행한 경우는 약 3.2% 감소했다.
-
-사용자·아이템 Fusion은 각각 graph count 1, Graph break 0이었다. 반복 지연 측정 중 새 backend 그래프는 없었다. valid/test 각각 5,753명의 Top-K 순서·집합과 NDCG·Recall은 동일했고, 최대 embedding 오차는 약 `1.34e-7`이었다.
-
-최초 실행은 컴파일을 포함해 약 **27.9초** 걸렸다. 이는 반복 refresh 약 60 ms와 다른 비용이다. 짧게 한 번만 실행하는 상황과 계속 재사용하는 상황에서 판단이 달라질 수 있다.
-
-이 단계는 TorchDynamo·TorchInductor 활용 및 실행 분석 경험이다. 컴파일러 내부를 직접 개발하거나 특정 low-level fusion을 구현한 것은 아니다.
-
-## 8. 06 — FX Graph rewrite pass 직접 구현
-
-컴파일러 적용에서 더 나아가, 그래프를 직접 바꾸는 작은 pass를 구현했다. 대상 패턴은 GatedFusion의 병렬 Projection 두 개다.
-
-```text
-변환 전: proj_t(t), proj_v(v)
-변환 후: stack(t, v) → bmm → bias 추가 → 두 출력 선택
-```
-
-학습된 두 weight를 한 번 미리 묶고, 추론 시 두 입력을 stack해 batched GEMM으로 처리한다. 일반적인 단일 행렬에 block-diagonal weight를 만들어 불필요한 곱셈을 추가하는 방식은 사용하지 않았다.
-
-아래 그림은 실험 코드에서 추출한 실제 FX node와 의존 관계다. 주황색 두 Projection이 초록색 packed 모듈로 바뀐다.
-
-<div style="display:flex;gap:12px;align-items:flex-start;">
-  <div style="width:50%;"><strong>변환 전</strong><img src="{{ '/assets/img/preq-part1/fu_before.svg' | relative_url }}" alt="FX rewrite 전: 별도 proj_t와 proj_v" style="width:100%;height:auto;" loading="lazy"></div>
-  <div style="width:50%;"><strong>변환 후</strong><img src="{{ '/assets/img/preq-part1/fu_after.svg' | relative_url }}" alt="FX rewrite 후: packed_projection과 두 출력 선택" style="width:100%;height:auto;" loading="lazy"></div>
-</div>
-
-하나의 박스가 하나의 하드웨어 커널을 뜻하지는 않는다. packed 모듈 내부를 펼치면 입력 stack·bmm·bias·출력 선택이 여전히 존재한다.
-
-<details>
-<summary>packed 모듈 내부 FX 그래프 펼쳐 보기</summary>
-<img src="{{ '/assets/img/preq-part1/fu_packed_expanded.svg' | relative_url }}" alt="packed 모듈 내부의 stack, bmm, bias와 출력 선택" style="max-width:100%;height:auto;" loading="lazy">
-</details>
-
-### Pass 구현에서 확인한 것
-
-1. `proj_t`, `proj_v`가 각각 한 번 등장하는지 검사.
-2. 두 Linear의 weight 크기·dtype·device와 입력 의존성 검사.
-3. packed 모듈과 두 출력 선택 node 삽입.
-4. 기존 node 사용처를 바꾸고 두 Linear node 제거.
-5. `graph.lint()`로 그래프 연결 검사, `recompile()`로 실행 코드 갱신.
-6. 여러 batch·마지막 chunk 및 전체 모델 출력 검증.
-
-지원 범위는 같은 크기의 2D 입력을 받는 고정 가중치 추론 Projection이다. 지원하지 않는 패턴은 거절한다. 역전파나 임의의 Linear 조합을 처리하는 범용 pass는 아니다.
-
-Profiler에서 실제 실행 구조가 바뀐 것을 확인했다.
-
-| 연산 호출 | eager | FX traced | FX packed |
-|---|---:|---:|---:|
-| `aten::linear` | 60 | 60 | 30 |
-| `aten::bmm` | 0 | 0 | 15 |
-| `aten::stack` | 0 | 0 | 15 |
-
-Colab 실행에서 출력 비교 표의 embedding·score 오차는 0이었고, valid/test Top-K와 NDCG·Recall도 동일했다. 다만 속도는 다음과 같았다.
-
-| 경로 | 평균 refresh |
-|---|---:|
-| eager | 87.04 ms |
-| FX traced | 108.12 ms |
-| FX packed | 98.08 ms |
-
-packed는 traced보다 평균이 짧았지만, 원본 eager보다는 약 **12.7% 느렸다**. 입력 stack과 메모리 이동 등 추가 비용이 있으므로 Linear 호출 수만으로 가속을 판단할 수 없었다. 측정 변동도 있어 원인을 확정하지 않았다.
-
-직접 구현한 것은 **병렬 Projection의 실행 구조를 바꾸는 제한된 FX transformation**이다. Quantization operation fusion이나 CUDA·NEON 커널 구현과는 구분한다.
-
-## 9. 07 — SQLite 기반 Auto-Tuning 측정 이력
-
-같은 설정을 계속 재측정하는 비용을 줄이기 위해 SQLite Database를 구성했다.
-
-| 테이블 | 내용 |
-|---|---|
-| contexts | checkpoint·split·코드 hash, 환경, 측정 protocol |
-| configs | mode·chunk·CPU threads |
-| searches | 탐색 실행과 baseline anchor |
-| validations | 설정별 새 품질 검증 |
-| measurements | 완료된 측정 기록과 시간 |
-| samples | block·repeat별 실제 지연 |
-| cache_accesses | hit/miss·이유·참조한 측정 |
-
-같은 모델·설정만으로는 캐시를 허용하지 않았다. CPU 정보, PyTorch build, affinity와 runtime session, 코드 hash, TTL도 확인한다. 현재 baseline을 짧게 재측정한 **anchor**가 과거와 크게 다르면 저장된 지연을 사용하지 않는다. cache hit여도 출력과 Validation 추천은 새로 검증한다.
-
-```sql
-CREATE INDEX idx_measurement_cache
-ON measurements(context_key, config_key, created DESC);
-
-SELECT *
-FROM measurements
-WHERE context_key = ? AND config_key = ? AND status = 'complete'
-ORDER BY created DESC
-LIMIT 1;
-```
-
-실제 `EXPLAIN QUERY PLAN`에서도 위 index 사용을 확인했다. 측정과 전체 샘플은 transaction으로 함께 저장했다. SQLite 작업은 로컬 파일에서 하고, Drive에는 닫힌 snapshot을 저장하는 단일 writer 방식으로 구성했다.
-
-### Colab에서는 캐시가 왜 전부 miss였는가?
-
-| 항목 | initial search | cached repeat |
-|---|---:|---:|
-| cache hit | 0 / 12 | 0 / 12 |
-| 새 지연 샘플 | 180 | 180 |
-| 생략한 지연 샘플 | 0 | 0 |
-| baseline anchor | 153.12 ms | 68.83 ms |
-| 탐색 소요 시간 | 68.07 s | 54.83 s |
-
-반복 탐색의 miss 이유는 12개 모두 **`anchor_drift`**였다. anchor가 약 2.22배 차이 나서 허용 기준 1.25배를 넘었다. 캐시 조회가 고장 난 것이 아니라, 과거 결과 재사용을 거절하는 분기가 실행됐다.
-
-따라서 **68.07초 → 54.83초 감소를 캐시 효과로 보고하지 않았다.** 두 번 모두 180개 지연 샘플을 새로 측정했다. DB에는 측정 24개·샘플 360개가 저장됐고, 최종 후보도 fresh confirmation 기준을 통과하지 못해 baseline을 유지했다.
-
-로컬 기능 검증에서는 캐시 hit와 중복 측정 생략도 확인했지만, 이를 Colab에서 얻은 성과처럼 합쳐 쓰지는 않았다. 캐시가 제안하는 설정은 과거 측정에 따른 후보일 뿐이며, 최종 선택에는 새로운 측정이 필요하다.
-
-## 10. 08 — BF16 AMP와 정밀도 정책 자동 선택
-
-마지막으로 `torch.autocast`를 이용해 Projection과 Gate의 계산 정밀도를 바꿨다. INT8 실험과 달리 **저장 가중치는 FP32로 유지**한다.
-
-| 정책 | Projection | Gate |
-|---|---|---|
-| fp32 | FP32 | FP32 |
-| projection_bf16 | BF16 autocast | FP32 |
-| gate_bf16 | FP32 | BF16 autocast |
-| fusion_linear_bf16 | BF16 autocast | BF16 autocast |
-
-Normalization, sigmoid, 혼합, codebook, ID embedding, sparse propagation과 점수 GEMM은 FP32로 유지했다. Linear 뒤에 FP32로 돌아오는 경계를 명시했다.
-
-```python
-# Projection 구간의 축약 예시
-with torch.autocast("cpu", dtype=torch.bfloat16, enabled=projection_amp):
-    t = self.proj_t(t)
-    v = self.proj_v(v)
-
-t = F.normalize(t.float(), dim=-1)
-v = F.normalize(v.float(), dim=-1)
-```
-
-출력 hook으로 실제 dtype을 확인하고, 반복 측정 전에 hook을 제거했다. Projection 정책은 Linear 4개, Gate 정책은 4개, 전체 정책은 8개에서 BF16 출력을 확인했다. 최종 embedding은 FP32였다.
-
-### 자동 선택의 기준
-
-1. Validation NDCG 상대 감소 1% 이내인 정책을 허용.
-2. 허용된 정책 중 탐색 지연으로 후보 제안.
-3. BF16 후보가 제안되면 FP32와 fresh confirmation.
-4. speedup·평균·P95·block별 승리 조건을 통과해야 채택.
-5. 선택을 마친 뒤 Test를 보고하고 정책 JSON을 저장·복원 검증.
-
-네 개의 정해진 정책을 비교하는 작은 탐색기다. 새로운 범용 AMP 알고리즘을 제안한 것은 아니다.
-
-| 정책 | 평균 refresh | FP32 대비 소요 시간 |
-|---|---:|---:|
-| FP32 | 78.69 ms | 1.00배 |
-| Projection BF16 | 173.32 ms | 2.20배 |
-| Gate BF16 | 148.58 ms | 1.89배 |
-| 전체 Fusion Linear BF16 | 234.10 ms | 2.98배 |
-
-Validation NDCG 상대 감소는 Projection 약 **0.027%**, Gate 0%, 전체 약 **0.019%**로 모두 기준을 통과했다. 다만 추천 순서가 바뀐 사용자는 각각 786명·90명·795명이었고, 추천 집합이 바뀐 사용자는 129명·20명·129명이었다. 품질 기준 통과와 추천 목록 동일성은 다른 조건이다.
-
-탐색에서 FP32가 가장 빨라 **`keep_fp32`**가 선택됐다. 이 실행에서는 BF16 후보가 제안되지 않았기 때문에 confirmation은 FP32만 재측정했다. Test 표 역시 선택된 FP32의 결과이며, BF16 Test 성능을 보여 주는 표가 아니다.
-
-작은 행렬, CPU 지원, autocast context와 캐스팅 비용 등이 속도 저하의 원인 후보다. dtype 확인만으로 native BF16 하드웨어 가속 여부를 단정하지 않았다. 이번 구현의 구간별 context·변환 비용은 측정에 포함됐다.
-
-## 11. Part 1에서 얻은 구현 경험
-
-Part 1에서는 다음을 실제 모델에 적용하고 검증했다.
-
-- PyTorch Profiler 기반 연산·구간 분석과 측정 코드 구성.
-- Lookup batching과 실행 설정 유한 탐색.
-- 선택적 INT8 Dynamic Quantization과 BF16 AMP 비교.
-- TorchDynamo·TorchInductor 활용 및 그래프 포착 진단.
-- 작은 `torch.fx` Graph rewrite pass 구현·시각화.
-- SQLite schema·index·transaction·측정 이력 캐시와 무효화.
-- Validation 품질 제약과 실측 지연에 따른 제한된 정밀도 정책 선택.
-
-각 변경이 빨라질 것이라고 가정하는 대신, 실제 연산·출력·추천 결과와 정상 실행 지연을 따로 확인했다. 다음 Part 2에서는 이 기반 위에서 추가 최적화 문제와 하드웨어 실행 범위를 확장할 예정이다. DP/RL, 직접 CUDA·NEON 커널, Multi-device allocation은 이번 Part 1에서 구현한 항목에 포함하지 않는다.
-
-## 12. 결과 기록과 재현 시 확인할 항목
-
-본문 표의 Colab 평균·P95를 모은 [요약 CSV]({{ '/assets/data/preq-part1/reported_results.csv' | relative_url }})를 함께 남겼다. 이 CSV는 실행 출력에서 옮긴 **집계값**이며 raw latency sample 전체가 아니다.
-
-재현 시에는 단순한 노트북 이름보다 다음 조건을 함께 남겨야 한다.
-
-- 원본 checkpoint·split hash와 입력 형식.
-- Python·PyTorch 버전과 CPU·thread 설정.
-- Lookup 방식·chunk·정밀도 적용 범위.
-- warmup·반복 횟수·실행 순서·확인 측정 여부.
-- evaluator와 history mask, Top-K 변화·품질 기준.
-- Profiler 포함 여부와 평균·P50·P95의 구분.
-
-이 글의 수치는 2026-10-20에 실행한 실험 기록이다. 같은 코드라도 공유 CPU 부하와 라이브러리 구현에 따라 결과가 달라질 수 있다. 배포 판단에는 대상 환경에서 다시 측정한 결과가 필요하다.
-
-## 참고 자료
+### 참고 자료
 
 - [PyTorch Profiler](https://docs.pytorch.org/docs/stable/profiler.html)
 - [torch.compile](https://docs.pytorch.org/docs/stable/generated/torch.compile.html)

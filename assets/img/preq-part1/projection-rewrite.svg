@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="510" viewBox="0 0 960 510" role="img" aria-label="FX rewrite 핵심 구조: 두 Projection을 batched GEMM으로 재구성">
+<style>text{font-family:Arial,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;fill:#243449} .muted{fill:#5b6b7c} .label{font-size:18px;font-weight:700} .small{font-size:15px}</style>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#8292a5"/></marker></defs>
+<rect width="960" height="510" rx="18" fill="#f5f7fb"/>
+<text x="32" y="43" font-size="25" text-anchor="start" font-weight="700">두 Linear를 묶으면, 실행도 더 빨라질까?</text>
+<text x="32" y="79" font-size="16" text-anchor="start" style="fill:#5b6b7c">실제 FX 그래프에서 변경한 부분을 단순화한 그림</text>
+<line x1="480" y1="103" x2="480" y2="408" stroke="#d5dde8"/>
+<text x="240" y="123" font-size="20" text-anchor="middle" font-weight="700">변환 전</text>
+<text x="720" y="123" font-size="20" text-anchor="middle" font-weight="700">변환 후</text>
+<rect x="48" y="154" width="170" height="76" rx="12" fill="#ffffff" stroke="#d5dde8"/>
+<text x="133.0" y="185" font-size="18" text-anchor="middle" font-weight="700">텍스트 입력</text>
+<rect x="262" y="154" width="170" height="76" rx="12" fill="#ffffff" stroke="#d5dde8"/>
+<text x="347.0" y="185" font-size="18" text-anchor="middle" font-weight="700">이미지 입력</text>
+<rect x="48" y="270" width="170" height="76" rx="12" fill="#fff0df" stroke="#d5dde8"/>
+<text x="133.0" y="301" font-size="18" text-anchor="middle" font-weight="700">Projection T</text>
+<rect x="262" y="270" width="170" height="76" rx="12" fill="#fff0df" stroke="#d5dde8"/>
+<text x="347.0" y="301" font-size="18" text-anchor="middle" font-weight="700">Projection V</text>
+<path d="M133,230 L133,262" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M347,230 L347,262" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="240" y="390" font-size="17" text-anchor="middle">별도 Linear 연산 2개</text>
+<rect x="528" y="154" width="170" height="76" rx="12" fill="#ffffff" stroke="#d5dde8"/>
+<text x="613.0" y="185" font-size="18" text-anchor="middle" font-weight="700">텍스트 입력</text>
+<rect x="742" y="154" width="170" height="76" rx="12" fill="#ffffff" stroke="#d5dde8"/>
+<text x="827.0" y="185" font-size="18" text-anchor="middle" font-weight="700">이미지 입력</text>
+<path d="M613,230 L686,262" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M827,230 L754,262" stroke="#8292a5" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="564" y="270" width="312" height="96" rx="12" fill="#e7f4ef" stroke="#d5dde8"/>
+<text x="720.0" y="301" font-size="18" text-anchor="middle" font-weight="700">Packed batched GEMM</text>
+<text x="720.0" y="327" font-size="14" text-anchor="middle" style="fill:#5b6b7c">stack → bmm → bias → 출력 분리</text>
+<text x="720" y="402" font-size="16" text-anchor="middle">가중치는 미리 묶고, 입력은 실행 시 묶는다</text>
+<text x="32" y="451" font-size="19" text-anchor="start" font-weight="700">Profiler: Linear 60 → 30회 / bmm 0 → 15회 / stack 0 → 15회</text>
+<text x="32" y="484" font-size="16" text-anchor="start" style="fill:#5b6b7c">호출 감소는 확인했지만, 입력을 묶는 추가 비용도 함께 발생했다.</text>
+</svg>

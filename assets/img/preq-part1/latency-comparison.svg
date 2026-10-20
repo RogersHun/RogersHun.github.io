@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="775" viewBox="0 0 960 775" role="img" aria-label="각 독립 실험 내 CPU 평균 embedding 갱신 시간 비교">
+<style>text{font-family:Arial,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;fill:#243449} .muted{fill:#5b6b7c} .label{font-size:18px;font-weight:700} .small{font-size:15px}</style>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#8292a5"/></marker></defs>
+<rect width="960" height="775" rx="18" fill="#f5f7fb"/>
+<text x="32" y="43" font-size="25" text-anchor="start" font-weight="700">기법마다 달랐던 실제 실행 시간</text>
+<text x="32" y="77" font-size="16" text-anchor="start" style="fill:#5b6b7c">각 패널은 별도 실행·별도 눈금이다. 패널 간 수치나 개선율을 합산하지 않았다.</text>
+<text x="32" y="128" font-size="21" text-anchor="start" font-weight="700">INT8 Dynamic Quantization</text>
+<text x="38" y="170" font-size="15" text-anchor="start">FP32</text>
+<rect x="260" y="153" width="452.8264169699312" height="23" rx="4" fill="#a0adbe"/>
+<text x="722.8264169699312" y="171" font-size="15" text-anchor="start">35.02 ms</text>
+<text x="38" y="206" font-size="15" text-anchor="start">Projection INT8</text>
+<rect x="260" y="189" width="483.7156014222755" height="23" rx="4" fill="#bb7650"/>
+<text x="753.7156014222755" y="207" font-size="15" text-anchor="start">37.41 ms</text>
+<text x="38" y="242" font-size="15" text-anchor="start">Gate INT8</text>
+<rect x="260" y="225" width="472.4478730790351" height="23" rx="4" fill="#bb7650"/>
+<text x="742.4478730790352" y="243" font-size="15" text-anchor="start">36.54 ms</text>
+<text x="38" y="278" font-size="15" text-anchor="start">Fusion Linear INT8</text>
+<rect x="260" y="261" width="560.0" height="23" rx="4" fill="#bb7650"/>
+<text x="830.0" y="279" font-size="15" text-anchor="start">43.31 ms</text>
+<text x="32" y="348" font-size="21" text-anchor="start" font-weight="700">torch.compile</text>
+<text x="38" y="390" font-size="15" text-anchor="start">eager</text>
+<rect x="260" y="373" width="521.6719317586874" height="23" rx="4" fill="#a0adbe"/>
+<text x="791.6719317586874" y="391" font-size="15" text-anchor="start">62.93 ms</text>
+<text x="38" y="426" font-size="15" text-anchor="start">aot_eager</text>
+<rect x="260" y="409" width="560.0" height="23" rx="4" fill="#428e81"/>
+<text x="830.0" y="427" font-size="15" text-anchor="start">67.55 ms</text>
+<text x="38" y="462" font-size="15" text-anchor="start">TorchInductor</text>
+<rect x="260" y="445" width="499.0328543015183" height="23" rx="4" fill="#428e81"/>
+<text x="769.0328543015182" y="463" font-size="15" text-anchor="start">60.20 ms</text>
+<text x="32" y="533" font-size="21" text-anchor="start" font-weight="700">BF16 AMP</text>
+<text x="38" y="575" font-size="15" text-anchor="start">FP32</text>
+<rect x="260" y="558" width="188.23175514257986" height="23" rx="4" fill="#a0adbe"/>
+<text x="458.23175514257986" y="576" font-size="15" text-anchor="start">78.69 ms</text>
+<text x="38" y="611" font-size="15" text-anchor="start">Projection BF16</text>
+<rect x="260" y="594" width="414.59868656769055" height="23" rx="4" fill="#8a79a8"/>
+<text x="684.5986865676905" y="612" font-size="15" text-anchor="start">173.32 ms</text>
+<text x="38" y="647" font-size="15" text-anchor="start">Gate BF16</text>
+<rect x="260" y="630" width="355.420451693725" height="23" rx="4" fill="#8a79a8"/>
+<text x="625.420451693725" y="648" font-size="15" text-anchor="start">148.58 ms</text>
+<text x="38" y="683" font-size="15" text-anchor="start">Fusion Linear BF16</text>
+<rect x="260" y="666" width="560.0" height="23" rx="4" fill="#8a79a8"/>
+<text x="830.0" y="684" font-size="15" text-anchor="start">234.10 ms</text>
+<text x="32" y="752" font-size="16" text-anchor="start" style="fill:#5b6b7c">지표: 전체 embedding 갱신 평균. BF16·INT8은 이 실행에서 속도 개선으로 이어지지 않았다.</text>
+</svg>
