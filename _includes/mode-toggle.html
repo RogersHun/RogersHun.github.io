@@ -1,9 +1,8 @@
-<!-- Switch the mode between dark and light. -->
-
+<!-- Start in light mode, while retaining a per-tab light/dark switch. -->
 <script type="text/javascript">
   class ModeToggle {
     static get MODE_KEY() {
-      return 'mode';
+      return 'mode-light-default-v1';
     }
     static get MODE_ATTR() {
       return 'data-mode';
@@ -19,71 +18,21 @@
     }
 
     constructor() {
-      if (this.hasMode) {
-        if (this.isDarkMode) {
-          if (!this.isSysDarkPrefer) {
-            this.setDark();
-          }
-        } else {
-          if (this.isSysDarkPrefer) {
-            this.setLight();
-          }
-        }
+      if (this.mode === ModeToggle.DARK_MODE) {
+        this.setDark();
+      } else {
+        this.setLight();
       }
-
-      let self = this;
-
-      /* always follow the system prefers */
-      this.sysDarkPrefers.addEventListener('change', () => {
-        if (self.hasMode) {
-          if (self.isDarkMode) {
-            if (!self.isSysDarkPrefer) {
-              self.setDark();
-            }
-          } else {
-            if (self.isSysDarkPrefer) {
-              self.setLight();
-            }
-          }
-
-          self.clearMode();
-        }
-
-        self.notify();
-      });
-    } /* constructor() */
-
-    get sysDarkPrefers() {
-      return window.matchMedia('(prefers-color-scheme: dark)');
-    }
-
-    get isSysDarkPrefer() {
-      return this.sysDarkPrefers.matches;
-    }
-
-    get isDarkMode() {
-      return this.mode === ModeToggle.DARK_MODE;
-    }
-
-    get isLightMode() {
-      return this.mode === ModeToggle.LIGHT_MODE;
-    }
-
-    get hasMode() {
-      return this.mode != null;
     }
 
     get mode() {
       return sessionStorage.getItem(ModeToggle.MODE_KEY);
     }
 
-    /* get the current mode on screen */
     get modeStatus() {
-      if (this.isDarkMode || (!this.hasMode && this.isSysDarkPrefer)) {
-        return ModeToggle.DARK_MODE;
-      } else {
-        return ModeToggle.LIGHT_MODE;
-      }
+      return this.mode === ModeToggle.DARK_MODE
+        ? ModeToggle.DARK_MODE
+        : ModeToggle.LIGHT_MODE;
     }
 
     setDark() {
@@ -96,12 +45,6 @@
       sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.LIGHT_MODE);
     }
 
-    clearMode() {
-      document.documentElement.removeAttribute(ModeToggle.MODE_ATTR);
-      sessionStorage.removeItem(ModeToggle.MODE_KEY);
-    }
-
-    /* Notify another plugins that the theme mode has changed */
     notify() {
       window.postMessage(
         {
@@ -113,31 +56,14 @@
     }
 
     flipMode() {
-      if (this.hasMode) {
-        if (this.isSysDarkPrefer) {
-          if (this.isLightMode) {
-            this.clearMode();
-          } else {
-            this.setLight();
-          }
-        } else {
-          if (this.isDarkMode) {
-            this.clearMode();
-          } else {
-            this.setDark();
-          }
-        }
+      if (this.modeStatus === ModeToggle.DARK_MODE) {
+        this.setLight();
       } else {
-        if (this.isSysDarkPrefer) {
-          this.setLight();
-        } else {
-          this.setDark();
-        }
+        this.setDark();
       }
-
       this.notify();
-    } /* flipMode() */
-  } /* ModeToggle */
+    }
+  }
 
   const modeToggle = new ModeToggle();
 </script>

@@ -8,9 +8,8 @@ layout: compress
 
 {% include lang.html %}
 
-{% if site.theme_mode %}
-  {% capture prefer_mode %}data-mode="{{ site.theme_mode }}"{% endcapture %}
-{% endif %}
+{% assign default_mode = site.theme_mode | default: 'light' %}
+{% capture prefer_mode %}data-mode="{{ default_mode }}"{% endcapture %}
 
 <!-- `site.alt_lang` can specify a language different from the UI -->
 <html lang="{{ page.lang | default: site.alt_lang | default: site.lang }}" {{ prefer_mode }}>

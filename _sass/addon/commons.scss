@@ -736,7 +736,7 @@ $btn-mb: 0.5rem;
     overflow: hidden;
     box-shadow: var(--avatar-border-color) 0 0 0 2px;
     background: url('/assets/img/hd.jpg');
-    background-size: 100% 110%;
+    background-size: cover;
     background-position: center;
     transform: translateZ(0); /* fixed the zoom in Safari */
 
