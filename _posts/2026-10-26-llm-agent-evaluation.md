@@ -34,11 +34,11 @@ flowchart LR
 
 ## Experiments & Lessons
 
-### 추천 시스템 — 맞는 아이템을 얼마나 위에 놓았는가
+### 01. 추천 시스템 — 맞는 아이템을 얼마나 위에 놓았는가
 
 추천 모델은 **추천 목록의 순서**가 중요하다. 연구에서 사용한 Recall@K, NDCG@K 같은 지표는 정답 아이템이 상위 K개에 들어왔는지, 그 안에서도 얼마나 높은 위치에 있는지 살펴본다.
 
-이전 [PReQ 추론 최적화 실험]({{ '/posts/preq-inference-optimization-part-1/' | relative_url }})에서도 실행 시간을 줄이는 후보를 고르기 전에 Validation NDCG의 허용 하락 폭을 정했다. 연산 변경 뒤에는 출력 오차와 사용자별 Top-K 목록도 확인했다. **빨라진 설정이 추천 결과를 지나치게 바꾸면 채택하지 않기 위해서**다.
+이전 [기존 연구 모델 최적화 실험]({{ '/posts/preq-inference-optimization-part-1/' | relative_url }})에서도 실행 시간을 줄이는 후보를 고르기 전에 Validation NDCG의 허용 하락 폭을 정했다. 연산 변경 뒤에는 출력 오차와 사용자별 Top-K 목록도 확인했다. **빨라진 설정이 추천 결과를 지나치게 바꾸면 채택하지 않기 위해서**다.
 
 단, Top-K 목록이 같다는 사실만으로 새로운 추천 모델의 정확도가 높아졌다고 말할 수는 없다. 그 실험은 동일한 학습 모델의 **실행 방식을 비교**한 것이며, 논문의 전체 정확도를 다시 검증한 실험은 아니었다.
 
@@ -85,5 +85,5 @@ LLM·Agent 평가에는 정답률뿐 아니라 **근거의 신뢰성, 실제 과
 
 ## References
 
-- [PReQ 추론 최적화 기록]({{ '/posts/preq-inference-optimization-part-1/' | relative_url }})
-- [Dexon Project](https://github.com/RogersHun/Dexon_Project)
+- [기존 연구 최적화 실험]({{ '/posts/preq-inference-optimization-part-1/' | relative_url }})
+- [SSD 예지보전 프로젝트](https://github.com/RogersHun/Dexon_Project)
