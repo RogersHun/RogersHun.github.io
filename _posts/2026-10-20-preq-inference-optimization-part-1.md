@@ -2,7 +2,7 @@
 title: "Multimodal Quantization 연구 모델 디벨롭"
 description: "압축된 추천 모델에 Lookup 재구성, Quantization, Compiler, FX Graph rewrite, Database, AMP를 적용하며 추론 효율을 비교한 기록"
 date: 2026-10-01 00:00:00 +0900
-categories: [AI, Quantization]
+categories: [AI, Model Lightweighting]
 tags: [pytorch, profiling, quantization, torch-compile, torch-fx, auto-tuning, sqlite, mixed-precision]
 pin: false
 math: false

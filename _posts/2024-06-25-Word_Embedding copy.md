@@ -3,9 +3,9 @@ title: Word Embedding
 description: One-hot encoding, Word Embedding(CBOW & Skip-gram), GloVe
 #author: RogersHun
 date: 2024-06-25 11:33:00 +0800
-categories: [AI, NLP]
+categories: [AI, ML]
 #tags: [One-hot encoding, Word Embedding, CBOW, Skip-gram, GloVe] #밑에 태그
-pin: true
+pin: false
 math: true
 mermaid: true 
 ---

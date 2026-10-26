@@ -3,7 +3,7 @@ title: Matrix Factorization 논문 리뷰
 description: Matrix Factorization Techniques for Recommender Systems (Koren et al., 2009)
 date: 2025-02-25 11:33:00 +0800
 categories: [Paper Review]
-pin: true
+pin: false
 math: true
 mermaid: true
 ---

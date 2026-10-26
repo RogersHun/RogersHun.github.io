@@ -2,8 +2,8 @@
 title: 추천시스템의 평가지표
 description: Precision, Recall, NDCG, Hit Rate, MAE, RMSE, MAPE, Negative Sampling, Leave-One-Out
 date: 2025-07-04 11:33:00 +0800
-categories: [AI, Recommender System]
-pin: true
+categories: [AI, Model Evaluation]
+pin: false
 math: true
 mermaid: true
 ---
