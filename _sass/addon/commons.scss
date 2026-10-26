@@ -1558,3 +1558,55 @@ search {
     }
   }
 } /* min-width: 1650px */
+
+
+/* Keep sidebar text readable over the artwork. */
+#sidebar {
+  .profile-wrapper,
+  nav > ul {
+    width: calc(100% - 2rem);
+    margin-right: 1rem;
+    margin-left: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 0.5rem 1.5rem rgba(24, 43, 35, 0.16);
+    backdrop-filter: blur(6px);
+  }
+
+  .profile-wrapper {
+    margin-top: 1rem;
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+  }
+
+  .site-title a,
+  .site-subtitle {
+    color: #24352e;
+    text-shadow: none;
+  }
+
+  nav > ul {
+    margin-bottom: 1.5rem;
+    padding: 0.55rem 0;
+  }
+
+  ul li.nav-item {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+
+    a.nav-link {
+      color: #31443c;
+
+      &:hover {
+        color: #173d2e;
+        background: rgba(70, 107, 91, 0.12);
+      }
+    }
+
+    &.active .nav-link {
+      color: #173d2e;
+      background: rgba(70, 107, 91, 0.18);
+    }
+  }
+}

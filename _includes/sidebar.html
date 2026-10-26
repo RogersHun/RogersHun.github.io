@@ -1,8 +1,8 @@
 <!-- The Side Bar -->
 
-<aside aria-label="Sidebar" id="sidebar" class="d-flex flex-column align-items-end" style="background-image: url('{{ "/assets/img/sidebar-art-2026.jpg" | relative_url }}'); background-size: cover; background-position: center;">
+<aside aria-label="Sidebar" id="sidebar" class="d-flex flex-column align-items-end" style="background-image: url('{{ "/assets/img/sidebar-art-2026.jpg" | relative_url }}?v=sidebar-20261026'); background-size: cover; background-position: center;">
   <header class="profile-wrapper">
-    <a href="{{ '/' | relative_url }}" id="avatar" class="rounded-circle">
+    <a href="{{ '/' | relative_url }}" id="avatar" class="rounded-circle" style="background-image: url('{{ "/assets/img/hd.jpg" | relative_url }}?v=dog-20261026'); background-size: cover; background-position: center;">
       {%- if site.avatar != empty and site.avatar -%}
         {%- capture avatar_url -%}
           {% include img-url.html src=site.avatar %}
@@ -29,15 +29,17 @@
       </li>
       <!-- the real tabs -->
       {% for tab in site.tabs %}
-        <li class="nav-item{% if tab.url == page.url %}{{ " active" }}{% endif %}">
-          <a href="{{ tab.url | relative_url }}" class="nav-link">
-            <i class="fa-fw {{ tab.icon }}"></i>
-            {% capture tab_name %}{{ tab.url | split: '/' }}{% endcapture %}
+        {% unless tab.nav_hidden %}
+          <li class="nav-item{% if tab.url == page.url %}{{ " active" }}{% endif %}">
+            <a href="{{ tab.url | relative_url }}" class="nav-link">
+              <i class="fa-fw {{ tab.icon }}"></i>
+              {% capture tab_name %}{{ tab.url | split: '/' }}{% endcapture %}
 
-            <span>{{ site.data.locales[include.lang].tabs.[tab_name] | default: tab.title | upcase }}</span>
-          </a>
-        </li>
-        <!-- .nav-item -->
+              <span>{{ site.data.locales[include.lang].tabs.[tab_name] | default: tab.title | upcase }}</span>
+            </a>
+          </li>
+          <!-- .nav-item -->
+        {% endunless %}
       {% endfor %}
     </ul>
   </nav>

@@ -1,4 +1,31 @@
 <head>
+  <script>
+    (() => {
+      const resetKey = 'sidebar-cache-reset-20261026-v2';
+
+      if (localStorage.getItem(resetKey)) {
+        return;
+      }
+
+      window.addEventListener('load', async () => {
+        try {
+          const registrations =
+            'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistrations() : [];
+          const cacheKeys = 'caches' in window ? await caches.keys() : [];
+
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+          await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+          localStorage.setItem(resetKey, 'done');
+
+          if (registrations.length > 0 || cacheKeys.length > 0) {
+            window.location.reload();
+          }
+        } catch (error) {
+          console.warn('Could not reset the previous site cache.', error);
+        }
+      });
+    })();
+  </script>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f7f7">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1b1e">
